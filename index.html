@@ -175,16 +175,23 @@
     <!-- ==================== TELA DE CADASTRO ==================== -->
     <div id="view-cadastro" class="view hidden">
         <div class="card-glass" style="max-width: 400px; margin-top: 5rem;">
-            <h2 class="title-gradient" style="text-align: center;">Registro do Mestre</h2>
-            <p style="text-align: center; margin-bottom: 2rem; color: #cbd5e1;">Crie a conta do Responsável</p>
+            <h2 class="title-gradient" style="text-align: center;">Registro da Família</h2>
+            <p style="text-align: center; margin-bottom: 2rem; color: #cbd5e1;">Crie a conta do Responsável e da Criança juntos</p>
             
+            <h4 style="margin-bottom:0.5rem; color:#f59e0b;">Dados do Responsável (Pai/Mãe)</h4>
             <input type="text" id="cad-nome" placeholder="Nome Completo">
             <input type="text" id="cad-cpf" placeholder="CPF (Apenas números)">
-            <input type="email" id="cad-email" placeholder="E-mail principal">
-            <input type="text" id="cad-tel" placeholder="Telefone com DDD">
             <input type="password" id="cad-pass" placeholder="Senha Segura">
+            <label style="font-size:0.8rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">Data de Nascimento</label>
+            <input type="date" id="cad-nasc-pai">
+
+            <h4 style="margin-top: 1rem; margin-bottom:0.5rem; color:#f59e0b;">Dados da Criança</h4>
+            <input type="text" id="cad-nick-filho" placeholder="Nickname da Criança (Ex: joaozinho_10)">
+            <input type="password" id="cad-pass-filho" placeholder="Senha da Criança">
+            <label style="font-size:0.8rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">Data de Nascimento</label>
+            <input type="date" id="cad-nasc-filho">
             
-            <button onclick="doCadastro()" style="width: 100%; margin-bottom: 1rem;" class="btn-success">Cadastrar Fortaleza</button>
+            <button onclick="doCadastro()" style="width: 100%; margin-top: 1rem; margin-bottom: 1rem;" class="btn-success">Cadastrar Fortaleza</button>
             <button onclick="voltarLogin()" style="width: 100%; background: transparent; border: 1px solid var(--glass-border);">Voltar ao Login</button>
         </div>
     </div>
@@ -224,12 +231,6 @@
                     <input type="number" id="mesada-id-filho" placeholder="ID do Filho (Dependente)">
                     <input type="number" id="mesada-valor" placeholder="Valor em R$ para transferir">
                     <button onclick="transferirMesada()" style="background: linear-gradient(135deg, #f59e0b, #d97706); margin-bottom: 2rem;">Transferir Moedas</button>
-
-                    <h3>Cadastrar Novo Filho</h3>
-                    <p style="color: #94a3b8; margin-bottom: 1rem; font-size: 0.9rem;">Crie a conta para a criança jogar.</p>
-                    <input type="text" id="filho-nick" placeholder="Nickname (Ex: joaozinho_10)">
-                    <input type="password" id="filho-pass" placeholder="Senha da Criança">
-                    <button class="btn-success" onclick="cadastrarFilho()">Criar Dependente</button>
                 </div>
             </div>
         </div>
@@ -437,22 +438,28 @@
         }
 
         async function doCadastro() {
-            const nome = document.getElementById('cad-nome').value;
+            const nome_completo = document.getElementById('cad-nome').value;
             const cpf = document.getElementById('cad-cpf').value;
-            const email = document.getElementById('cad-email').value;
-            const tel = document.getElementById('cad-tel').value;
-            const pass = document.getElementById('cad-pass').value;
+            const senha_master = document.getElementById('cad-pass').value;
+            const data_nascimento = document.getElementById('cad-nasc-pai').value;
+            
+            const nickname_filho = document.getElementById('cad-nick-filho').value;
+            const senha_filho = document.getElementById('cad-pass-filho').value;
+            const nascimento_filho = document.getElementById('cad-nasc-filho').value;
 
             try {
-                const res = await fetch(`${API}/auth/register-master`, {
+                const res = await fetch(`${API}/cadastro/responsavel`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nome_completo: nome, cpf, email, telefone: tel, senha: pass })
+                    body: JSON.stringify({ 
+                        nome_completo, cpf, senha_master, data_nascimento, 
+                        nickname_filho, senha_filho, nascimento_filho 
+                    })
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Erro ao cadastrar');
                 
-                alert('Conta Mestre criada com sucesso! Você ganhou R$ 500,00 de saldo inicial!');
+                alert('Família cadastrada com sucesso! Faça o login do pai e envie o saldo para a criança.');
                 voltarLogin();
                 document.getElementById('login-id').value = cpf;
             } catch (e) {
@@ -524,17 +531,6 @@
                 document.getElementById('mesada-valor').value = '';
                 carregarSaldoPai();
                 alert('Mesada transferida com sucesso!');
-            } catch(e) {}
-        }
-
-        async function cadastrarFilho() {
-            const nick = document.getElementById('filho-nick').value;
-            const pass = document.getElementById('filho-pass').value;
-            try {
-                const res = await fetchAPI('/auth/register-dependente', 'POST', { nickname: nick, senha: pass });
-                alert(`Dependente criado! O ID dele para transferência é: ${res.usuario.id_dependente}`);
-                document.getElementById('filho-nick').value = '';
-                document.getElementById('filho-pass').value = '';
             } catch(e) {}
         }
 
