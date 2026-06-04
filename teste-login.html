@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Álbum Virtual</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4A00E0;
+            --secondary: #8E2DE2;
+            --surface: rgba(255, 255, 255, 0.95);
+            --background: #f4f7fe;
+            --text-dark: #1f2937;
+            --text-muted: #6b7280;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            background: var(--surface);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            transform: translateY(0);
+            transition: all 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            color: var(--text-dark);
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #e5e7eb;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            background: #f9fafb;
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            transition: all 0.2s ease;
+            outline: none;
+            background: #f9fafb;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary);
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(74, 0, 224, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(74, 0, 224, 0.3);
+            margin-top: 1rem;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 0, 224, 0.4);
+            filter: brightness(110%);
+        }
+
+        /* Loading Spinner */
+        .loader {
+            display: none;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #feedbackBox {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: none;
+            word-break: break-all;
+        }
+
+        .feedback-success {
+            background-color: #d1fae5;
+            color: var(--success);
+            border: 1px solid #34d399;
+        }
+
+        .feedback-error {
+            background-color: #fee2e2;
+            color: var(--error);
+            border: 1px solid #f87171;
+        }
+
+        pre {
+            text-align: left;
+            background: rgba(255, 255, 255, 0.5);
+            padding: 0.5rem;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>Álbum Virtual</h1>
+            <p>Login de Acesso Seguro</p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('master')">Responsável</div>
+            <div class="tab" onclick="switchTab('dependente')">Criança</div>
+        </div>
+
+        <!-- LOGIN MASTER -->
+        <form id="loginMasterForm" class="form-section active">
+            <div class="input-group">
+                <label for="cpf">CPF</label>
+                <input type="text" id="cpf" placeholder="Ex: 12345678900" required>
+            </div>
+            <div class="input-group">
+                <label for="senha_master">Senha</label>
+                <input type="password" id="senha_master" placeholder="Sua senha" required>
+            </div>
+            <button type="submit">Entrar como Responsável</button>
+        </form>
+
+        <!-- LOGIN DEPENDENTE -->
+        <form id="loginDependenteForm" class="form-section">
+            <div class="input-group">
+                <label for="nickname">Nickname</label>
+                <input type="text" id="nickname" placeholder="Seu nickname" required>
+            </div>
+            <div class="input-group">
+                <label for="senha_filho">Senha / PIN</label>
+                <input type="password" id="senha_filho" placeholder="Sua senha" required>
+            </div>
+            <button type="submit">Entrar no Jogo!</button>
+        </form>
+
+        <div id="feedbackBox"></div>
+    </div>
+
+    <script>
+        let currentRole = 'master';
+
+        function switchTab(role) {
+            currentRole = role;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.form-section').forEach(f => f.classList.remove('active'));
+            
+            if(role === 'master') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('loginMasterForm').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('loginDependenteForm').classList.add('active');
+            }
+            document.getElementById('feedbackBox').style.display = 'none';
+        }
+
+        async function handleLogin(e, endpoint, payload) {
+            e.preventDefault();
+            const feedbackBox = document.getElementById('feedbackBox');
+            feedbackBox.style.display = 'none';
+            feedbackBox.className = '';
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/login/${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                feedbackBox.style.display = 'block';
+
+                if (response.ok) {
+                    feedbackBox.classList.add('feedback-success');
+                    // Salva token no LocalStorage para testes futuros
+                    localStorage.setItem('token', data.token);
+                    feedbackBox.innerHTML = `
+                        ✅ ${data.message} <br><br>
+                        <strong>Token JWT:</strong> <br>
+                        <span style="font-size: 0.7rem;">${data.token}</span>
+                        <pre>${JSON.stringify(data.user, null, 2)}</pre>
+                    `;
+                } else {
+                    feedbackBox.classList.add('feedback-error');
+                    feedbackBox.innerHTML = `❌ Erro: ${data.error}`;
+                }
+            } catch (error) {
+                feedbackBox.style.display = 'block';
+                feedbackBox.classList.add('feedback-error');
+                feedbackBox.innerHTML = `❌ Erro de Conexão: O servidor está rodando?`;
+            }
+        }
+
+        document.getElementById('loginMasterForm').addEventListener('submit', function(e) {
+            const payload = {
+                cpf: document.getElementById('cpf').value.replace(/\D/g, ''),
+                senha: document.getElementById('senha_master').value
+            };
+            handleLogin(e, 'responsavel', payload);
+        });
+
+        document.getElementById('loginDependenteForm').addEventListener('submit', function(e) {
+            const payload = {
+                nickname: document.getElementById('nickname').value,
+                senha: document.getElementById('senha_filho').value
+            };
+            handleLogin(e, 'dependente', payload);
+        });
+    </script>
+</body>
+</html>

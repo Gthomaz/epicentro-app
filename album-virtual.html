@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Álbum Virtual</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF416C;
+            --secondary: #FF4B2B;
+            --dark: #1e1e24;
+            --light: #f4f4f9;
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--dark) 0%, #2a2a35 100%);
+            color: var(--light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .header h1 {
+            font-weight: 800;
+            background: linear-gradient(to right, var(--primary), #FFB75E);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2rem;
+        }
+
+        .stats {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .stat-badge {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-abrir {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 16px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(255, 65, 108, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-abrir:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 25px rgba(255, 65, 108, 0.6);
+        }
+
+        .btn-abrir:active {
+            transform: translateY(1px);
+        }
+
+        .album-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1rem;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            aspect-ratio: 2.5 / 3.5;
+            justify-content: center;
+        }
+
+        .card:hover {
+            transform: translateY(-5px) rotate(2deg);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-color: var(--primary);
+        }
+
+        .card img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin-bottom: 1rem;
+            background: #fff;
+            padding: 5px;
+        }
+
+        .card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+        }
+
+        .card p {
+            font-size: 0.8rem;
+            color: #ccc;
+        }
+
+        .badge-raridade {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 0.7rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 8px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .badge-qtd {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--primary);
+            color: white;
+            font-size: 0.8rem;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: 800;
+        }
+
+        .lendaria { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); color: #000; }
+        .rara { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); color: #000; }
+        .comum { background: #4b5563; color: white; }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+        }
+
+        .modal-content {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 900px;
+        }
+
+        /* Animação do Pacotinho */
+        .pack-opening-anim {
+            width: 200px;
+            height: 300px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 800;
+            color: white;
+            animation: shake 0.5s infinite;
+            cursor: pointer;
+            box-shadow: 0 0 50px rgba(255, 65, 108, 0.8);
+        }
+
+        @keyframes shake {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(5deg); }
+            50% { transform: rotate(0deg); }
+            75% { transform: rotate(-5deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        .card-reveal {
+            opacity: 0;
+            transform: scale(0.5) translateY(50px);
+            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn {
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .close-modal {
+            margin-top: 2rem;
+            padding: 0.8rem 2rem;
+            background: transparent;
+            border: 2px solid white;
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            display: none;
+        }
+        
+        .close-modal:hover {
+            background: white;
+            color: black;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Meu Álbum Virtual</h1>
+        <div class="stats">
+            <div class="stat-badge">
+                <span>📚</span> <span id="totalCards">0</span> Coladas
+            </div>
+            <button class="btn-abrir" onclick="startOpeningPack()">Abrir Pacotinho!</button>
+        </div>
+    </div>
+
+    <div class="album-grid" id="albumGrid">
+        <!-- Figurinhas vão aparecer aqui -->
+    </div>
+
+    <!-- Modal de Abertura de Pacotinho -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="pack-opening-anim" id="packAnim" onclick="revealCards()">RASGAR PACOTINHO!</div>
+        <div class="modal-content" id="modalContent"></div>
+        <button class="close-modal" id="closeModalBtn" onclick="closeModal()">Guardar Figurinhas</button>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if(!token) {
+            alert('Você não está logado! Faça o login primeiro.');
+            window.location.href = 'teste-login.html';
+        }
+
+        let newCardsData = [];
+
+        async function loadAlbum() {
+            try {
+                const res = await fetch('http://localhost:3000/api/album/meu-album', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if(!res.ok) throw new Error('Erro ao carregar');
+                
+                const data = await res.json();
+                renderAlbum(data.album);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderAlbum(album) {
+            const grid = document.getElementById('albumGrid');
+            grid.innerHTML = '';
+            
+            let coladas = 0;
+
+            album.forEach(registro => {
+                const fig = registro.figurinha;
+                coladas += registro.quantidade;
+
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="badge-raridade ${fig.raridade.toLowerCase().replace('é', 'e').replace('í','i')}">${fig.raridade}</div>
+                    ${registro.quantidade > 1 ? `<div class="badge-qtd">${registro.quantidade}</div>` : ''}
+                    <img src="${fig.imagem}" alt="${fig.nome_jogador}">
+                    <h3>${fig.nome_jogador}</h3>
+                    <p>Fase ${fig.fase_grupo} • #${fig.numero_album}</p>
+                `;
+                grid.appendChild(card);
+            });
+
+            document.getElementById('totalCards').innerText = coladas;
+        }
+
+        async function startOpeningPack() {
+            document.getElementById('modalOverlay').style.display = 'flex';
+            document.getElementById('packAnim').style.display = 'flex';
+            document.getElementById('modalContent').innerHTML = '';
+            document.getElementById('closeModalBtn').style.display = 'none';
+
+            try {
+                const res = await fetch('http://localhost:3000/api/album/abrir-pacotinho', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if(!res.ok) throw new Error('Erro ao abrir pacotinho');
+                
+                const data = await res.json();
+                newCardsData = data.figurinhas;
+            } catch(e) {
+                alert('Erro ao abrir o pacotinho! Tente novamente.');
+                closeModal();
+            }
+        }
+
+        function revealCards() {
+            if(newCardsData.length === 0) return; // Ainda carregando
+
+            document.getElementById('packAnim').style.display = 'none';
+            const container = document.getElementById('modalContent');
+            
+            newCardsData.forEach((fig, index) => {
+                setTimeout(() => {
+                    const card = document.createElement('div');
+                    card.className = 'card card-reveal';
+                    card.innerHTML = `
+                        <div class="badge-raridade ${fig.raridade.toLowerCase().replace('é', 'e').replace('í','i')}">${fig.raridade}</div>
+                        ${!fig.is_nova ? `<div class="badge-qtd">Repetida!</div>` : '<div class="badge-qtd" style="background:#10b981; width:auto; padding:0 5px;">Nova!</div>'}
+                        <img src="${fig.imagem}" alt="${fig.nome_jogador}">
+                        <h3>${fig.nome_jogador}</h3>
+                        <p>Fase ${fig.fase_grupo} • #${fig.numero_album}</p>
+                    `;
+                    container.appendChild(card);
+                }, index * 400); // Aparecem uma a uma
+            });
+
+            setTimeout(() => {
+                document.getElementById('closeModalBtn').style.display = 'block';
+            }, newCardsData.length * 400 + 500);
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').style.display = 'none';
+            loadAlbum(); // Recarrega o grid principal
+        }
+
+        // Iniciar
+        loadAlbum();
+    </script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel dos Pais - Aprovações</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --secondary: #2563eb;
+            --danger: #ef4444;
+            --success: #10b981;
+            --dark: #1f2937;
+            --light: #f3f4f6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: #f8fafc;
+            color: var(--dark);
+            min-height: 100vh;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        .header h1 {
+            color: var(--primary);
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .troca-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .troca-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+        }
+
+        .troca-detalhes {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .item p { font-size: 0.9rem; color: #6b7280; }
+        .item h3 { font-size: 1.2rem; color: var(--dark); }
+        .seta { font-size: 2rem; color: #9ca3af; display: flex; align-items: center;}
+
+        .acoes {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        button {
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            color: white;
+        }
+        .btn-aprovar { background: var(--success); }
+        .btn-aprovar:hover { background: #059669; }
+        .btn-recusar { background: var(--danger); }
+        .btn-recusar:hover { background: #dc2626; }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ Painel de Segurança - Pais</h1>
+            <p>Revise e aprove as trocas propostas pelos seus filhos e seus amigos.</p>
+        </div>
+
+        <div id="pendenciasList" style="margin-top: 2rem;">
+            Carregando pendências...
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if(!token) {
+            alert('Você não está logado!');
+            window.location.href = 'teste-login.html';
+        }
+
+        async function carregarPendencias() {
+            try {
+                const res = await fetch('http://localhost:3000/api/trocas/pendentes', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                const list = document.getElementById('pendenciasList');
+                list.innerHTML = '';
+                
+                if(data.pendentes.length === 0) {
+                    list.innerHTML = '<p>Você não tem nenhuma troca pendente de aprovação.</p>';
+                    return;
+                }
+
+                data.pendentes.forEach(p => {
+                    const div = document.createElement('div');
+                    div.className = 'troca-card';
+                    div.innerHTML = `
+                        <div class="troca-header">
+                            <strong>Troca #${p.id_troca}</strong>
+                            <span style="color: #f59e0b; font-weight: 600;">⚠️ Aguardando Aprovação</span>
+                        </div>
+                        <div class="troca-detalhes">
+                            <div class="item">
+                                <p>Criança Proponente</p>
+                                <h3>${p.crianca_propos_rel.nickname}</h3>
+                                <p>Oferece: <strong>${p.figurinha_ofertada_rel.nome_jogador}</strong></p>
+                            </div>
+                            <div class="seta">⇆</div>
+                            <div class="item">
+                                <p>Criança que Aceitou</p>
+                                <h3>${p.crianca_aceitou_rel.nickname}</h3>
+                                <p>Oferece: <strong>${p.figurinha_solicitada_rel.nome_jogador}</strong></p>
+                            </div>
+                        </div>
+                        <p style="text-align: center; font-size: 0.85rem; color: #6b7280;">
+                            Pai 1 (Aprovou: ${p.pai_1_aprovou ? 'Sim' : 'Não'}) | Pai 2 (Aprovou: ${p.pai_2_aprovou ? 'Sim' : 'Não'})
+                        </p>
+                        <div class="acoes">
+                            <button class="btn-recusar" onclick="julgarTroca(${p.id_troca}, false)">🚫 Recusar Troca</button>
+                            <button class="btn-aprovar" onclick="julgarTroca(${p.id_troca}, true)">✅ Aprovar Troca</button>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        async function julgarTroca(id_troca, aprovado) {
+            try {
+                const res = await fetch('http://localhost:3000/api/trocas/aprovar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ id_troca, aprovado })
+                });
+                const data = await res.json();
+                alert(data.message || data.error);
+                carregarPendencias();
+            } catch(e) { console.error(e); }
+        }
+
+        // Init
+        carregarPendencias();
+    </script>
+</body>
+</html>

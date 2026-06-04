@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// 1. Tabela Master (Pais/Responsáveis)
+model usuarios_master {
+  id_master       Int       @id @default(autoincrement())
+  nome_completo   String    
+  cpf             String    @unique 
+  senha           String
+  data_nascimento DateTime  
+  status_kyc      String?   @default("Pendente") 
+  wallet_saldo    Float?    @default(0) 
+  saldo_reais     Decimal?  @default(0)
+  data_cadastro   DateTime? @default(now()) 
+
+  // Relacionamentos Inversos
+  dependentes         usuarios_dependentes[]
+  controle_fases      controle_fases_pais[]
+  salas_chat_pai_1    salas_chat[] @relation("salas_pai_1")
+  salas_chat_pai_2    salas_chat[] @relation("salas_pai_2")
+  apostas             apostas_arena[]
+  historico           historico_carteira[]
+}
+
+// 2. Tabela de Dependentes (Crianças)
+model usuarios_dependentes {
+  id_dependente   Int       @id @default(autoincrement())
+  id_master_fk    Int
+  nickname        String    
+  senha           String
+  data_nascimento DateTime  
+  moedas_virtuais Int?      @default(0)
+  data_cadastro   DateTime? @default(now()) 
+
+  // Vínculo Obrigatório com o Pai (Cascade Delete ativo)
+  master usuarios_master @relation(fields: [id_master_fk], references: [id_master], onDelete: Cascade)
+
+  // Relacionamentos Inversos
+  figurinhas          usuarios_figurinhas[]
+  controle_fases      controle_fases_pais[]
+  salas_chat_crianca_1 salas_chat[] @relation("salas_crianca_1")
+  salas_chat_crianca_2 salas_chat[] @relation("salas_crianca_2")
+  mensagens           mensagens_chat[]
+  trocas_propostas    autorizacoes_troca[] @relation("crianca_propos")
+  trocas_aceitas      autorizacoes_troca[] @relation("crianca_aceitou")
+}
+
+// 3. Catálogo Global de Figurinhas
+model figurinhas_catalogo {
+  id_figurinha  Int       @id @default(autoincrement())
+  numero_album  Int
+  nome_jogador  String    
+  fase_grupo    Int
+  raridade      String?   @default("Comum") 
+  imagem        String? 
+
+  usuarios_figurinhas     usuarios_figurinhas[]
+  trocas_ofertadas        autorizacoes_troca[] @relation("figurinha_ofertada")
+  trocas_solicitadas      autorizacoes_troca[] @relation("figurinha_solicitada")
+}
+
+// 4. Inventário de Figurinhas da Criança
+model usuarios_figurinhas {
+  id_registro      Int       @id @default(autoincrement())
+  id_dependente_fk Int
+  id_figurinha_fk  Int
+  quantidade       Int?      @default(1)
+  colada           Boolean?  @default(false)
+
+  dependente usuarios_dependentes @relation(fields: [id_dependente_fk], references: [id_dependente], onDelete: Cascade)
+  figurinha  figurinhas_catalogo  @relation(fields: [id_figurinha_fk], references: [id_figurinha])
+}
+
+// 5. Controle de Fases e Bloqueios pelo Pai
+model controle_fases_pais {
+  id_controle           Int       @id @default(autoincrement())
+  id_master_fk          Int
+  id_dependente_fk      Int
+  fase_atual_liberada   Int?      @default(1)
+  exigir_aprovacao_pai  Boolean?  @default(true)
+
+  master     usuarios_master      @relation(fields: [id_master_fk], references: [id_master], onDelete: Cascade)
+  dependente usuarios_dependentes @relation(fields: [id_dependente_fk], references: [id_dependente], onDelete: Cascade)
+}
+
+// 6. Salas de Chat (Controladas)
+model salas_chat {
+  id_sala      Int       @id @default(autoincrement())
+  id_crianca_1 Int
+  id_crianca_2 Int
+  id_pai_1     Int
+  id_pai_2     Int
+  status_sala  String?   @default("Ativa") 
+  data_criacao DateTime? @default(now()) 
+
+  crianca_1 usuarios_dependentes @relation("salas_crianca_1", fields: [id_crianca_1], references: [id_dependente])
+  crianca_2 usuarios_dependentes @relation("salas_crianca_2", fields: [id_crianca_2], references: [id_dependente])
+  pai_1     usuarios_master      @relation("salas_pai_1", fields: [id_pai_1], references: [id_master])
+  pai_2     usuarios_master      @relation("salas_pai_2", fields: [id_pai_2], references: [id_master])
+
+  mensagens            mensagens_chat[]
+  autorizacoes_troca   autorizacoes_troca[]
+}
+
+// 7. Histórico de Mensagens e Moderação (IA)
+model mensagens_chat {
+  id_mensagem      Int       @id @default(autoincrement())
+  id_sala_fk       Int
+  id_enviou_fk     Int
+  conteudo_mensagem String   
+  status_moderacao String?   @default("Aprovada") 
+  motivo_bloqueio  String?   
+  data_envio       DateTime? @default(now()) 
+
+  sala     salas_chat           @relation(fields: [id_sala_fk], references: [id_sala], onDelete: Cascade)
+  enviou   usuarios_dependentes @relation(fields: [id_enviou_fk], references: [id_dependente])
+}
+
+// 8. Autorização de Trocas (Pai 1 + Pai 2)
+model autorizacoes_troca {
+  id_troca                Int       @id @default(autoincrement())
+  id_sala_fk              Int?
+  id_figurinha_ofertada   Int
+  id_figurinha_solicitada Int
+  id_crianca_propos       Int
+  id_crianca_aceitou      Int?
+  pai_1_aprovou           Boolean?  @default(false)
+  pai_2_aprovou           Boolean?  @default(false)
+  status_troca            String?   @default("Aberta") // "Aberta", "Pendente_Aprovacao", "Autorizada", "Recusada"
+  data_proposta           DateTime? @default(now()) 
+
+  sala                   salas_chat?          @relation(fields: [id_sala_fk], references: [id_sala], onDelete: Cascade)
+  figurinha_ofertada_rel figurinhas_catalogo  @relation("figurinha_ofertada", fields: [id_figurinha_ofertada], references: [id_figurinha])
+  figurinha_solicitada_rel figurinhas_catalogo @relation("figurinha_solicitada", fields: [id_figurinha_solicitada], references: [id_figurinha])
+  crianca_propos_rel     usuarios_dependentes @relation("crianca_propos", fields: [id_crianca_propos], references: [id_dependente])
+  crianca_aceitou_rel    usuarios_dependentes? @relation("crianca_aceitou", fields: [id_crianca_aceitou], references: [id_dependente])
+}
+
+// 9. Apostas da Arena (Exclusivo Adultos)
+model apostas_arena {
+  id_aposta        Int       @id @default(autoincrement())
+  id_master_fk     Int
+  evento_descricao String    
+  tipo_aposta      String    
+  valor_apostado   Float   
+  cota_odd         Float   
+  status_aposta    String?   @default("Aberta") 
+  premio_potencial Float   
+  data_aposta      DateTime? @default(now()) 
+
+  master usuarios_master @relation(fields: [id_master_fk], references: [id_master], onDelete: Cascade)
+}
+
+// 10. Histórico de Carteira / KYC / PIX
+model historico_carteira {
+  id_transacao     Int       @id @default(autoincrement())
+  id_master_fk     Int
+  tipo_transacao   String    
+  valor            Float   
+  status_transacao String?   @default("Concluido") 
+  data_transacao   DateTime? @default(now()) 
+
+  master usuarios_master @relation(fields: [id_master_fk], references: [id_master], onDelete: Cascade)
+}

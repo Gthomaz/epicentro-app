@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feira de Trocas e Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #10b981;
+            --secondary: #059669;
+            --dark: #1f2937;
+            --light: #f3f4f6;
+            --glass: rgba(255, 255, 255, 0.9);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #a7f3d0 0%, #34d399 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: var(--secondary);
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 1rem;
+        }
+
+        .tab {
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .section { display: none; }
+        .section.active { display: block; }
+
+        /* Estilos da Feira */
+        .oferta-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid var(--primary);
+        }
+
+        .oferta-info h3 { margin-bottom: 0.5rem; color: var(--dark); }
+        .oferta-info p { color: #6b7280; font-size: 0.9rem; }
+
+        button {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover { background: var(--secondary); }
+
+        /* Estilos do Chat */
+        .chat-box {
+            height: 400px;
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .msg {
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            max-width: 80%;
+        }
+
+        .msg.me {
+            background: #d1fae5;
+            align-self: flex-end;
+            border-bottom-right-radius: 0;
+        }
+
+        .msg.other {
+            background: #f3f4f6;
+            align-self: flex-start;
+            border-bottom-left-radius: 0;
+        }
+
+        .msg.blocked {
+            background: #fee2e2;
+            color: #ef4444;
+            font-style: italic;
+        }
+
+        .msg strong { display: block; font-size: 0.8rem; margin-bottom: 0.2rem; color: #6b7280;}
+
+        .chat-input {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        .create-form {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            align-items: flex-end;
+        }
+
+        .create-form div { flex: 1; }
+        .create-form label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .create-form input { width: 100%; padding: 0.8rem; border: 1px solid #ccc; border-radius: 8px; }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>🤝 Mercado de Trocas & Chat</h1>
+            <p>Faça novos amigos e complete seu álbum com segurança!</p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('feira')">Feira Global</div>
+            <div class="tab" onclick="switchTab('chat')">Conversar (Chat)</div>
+        </div>
+
+        <!-- ABA FEIRA -->
+        <div id="feira" class="section active">
+            <div class="create-form">
+                <div>
+                    <label>ID da sua Figurinha Repetida (Oferto)</label>
+                    <input type="number" id="ofereço" placeholder="Ex: 5">
+                </div>
+                <div>
+                    <label>ID da Figurinha que eu Quero (Peço)</label>
+                    <input type="number" id="quero" placeholder="Ex: 8">
+                </div>
+                <button onclick="criarOferta()">Criar Oferta</button>
+            </div>
+
+            <h2>Ofertas Disponíveis no Mundo:</h2>
+            <div id="ofertasList" style="margin-top: 1rem;">Carregando...</div>
+        </div>
+
+        <!-- ABA CHAT -->
+        <div id="chat" class="section">
+            <div class="create-form" style="margin-bottom: 1rem;">
+                <div style="flex: 2;">
+                    <label>Nickname do Amigo</label>
+                    <input type="text" id="nicknameAmigo" placeholder="Ex: Joaozinho123">
+                </div>
+                <button onclick="abrirSala()">Iniciar Chat Seguro</button>
+            </div>
+
+            <div id="chatArea" style="display: none;">
+                <div class="chat-box" id="chatBox"></div>
+                <div class="chat-input">
+                    <input type="text" id="msgText" placeholder="Digite sua mensagem educada...">
+                    <button onclick="enviarMensagem()">Enviar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if(!token) {
+            alert('Você não está logado!');
+            window.location.href = 'teste-login.html';
+        }
+
+        let salaAtual = null;
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            
+            document.querySelector(`.tab[onclick="switchTab('${tabId}')"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+
+            if(tabId === 'feira') carregarOfertas();
+        }
+
+        // ========================== FEIRA ==========================
+        async function criarOferta() {
+            const of = document.getElementById('ofereço').value;
+            const q = document.getElementById('quero').value;
+
+            try {
+                const res = await fetch('http://localhost:3000/api/trocas/criar-oferta', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ id_figurinha_ofertada: Number(of), id_figurinha_solicitada: Number(q) })
+                });
+                const data = await res.json();
+                alert(data.message || data.error);
+                carregarOfertas();
+            } catch(e) { console.error(e); }
+        }
+
+        async function carregarOfertas() {
+            try {
+                const res = await fetch('http://localhost:3000/api/trocas/feira-global', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                
+                const list = document.getElementById('ofertasList');
+                list.innerHTML = '';
+                
+                if(data.ofertas.length === 0) {
+                    list.innerHTML = '<p>Nenhuma oferta disponível no momento.</p>';
+                    return;
+                }
+
+                data.ofertas.forEach(of => {
+                    const div = document.createElement('div');
+                    div.className = 'oferta-card';
+                    div.innerHTML = `
+                        <div class="oferta-info">
+                            <h3>De: ${of.crianca_propos_rel.nickname}</h3>
+                            <p><strong>Dá:</strong> ${of.figurinha_ofertada_rel.nome_jogador} (Fase ${of.figurinha_ofertada_rel.fase_grupo})</p>
+                            <p><strong>Quer:</strong> ${of.figurinha_solicitada_rel.nome_jogador}</p>
+                        </div>
+                        <button onclick="aceitarOferta(${of.id_troca})">Aceitar e Trocar</button>
+                    `;
+                    list.appendChild(div);
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        async function aceitarOferta(id_troca) {
+            try {
+                const res = await fetch('http://localhost:3000/api/trocas/aceitar-oferta', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ id_troca })
+                });
+                const data = await res.json();
+                alert(data.message || data.error);
+                carregarOfertas();
+            } catch(e) { console.error(e); }
+        }
+
+        // ========================== CHAT ==========================
+        async function abrirSala() {
+            const nickname = document.getElementById('nicknameAmigo').value;
+            if(!nickname) return;
+
+            try {
+                const res = await fetch('http://localhost:3000/api/chat/nova-sala', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ nickname_amigo: nickname })
+                });
+                const data = await res.json();
+                
+                if(data.error) { alert(data.error); return; }
+
+                salaAtual = data.sala.id_sala;
+                document.getElementById('chatArea').style.display = 'block';
+                carregarMensagens();
+            } catch(e) { console.error(e); }
+        }
+
+        async function carregarMensagens() {
+            if(!salaAtual) return;
+            try {
+                const res = await fetch(`http://localhost:3000/api/chat/sala/${salaAtual}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                
+                const box = document.getElementById('chatBox');
+                box.innerHTML = '';
+
+                data.mensagens.forEach(m => {
+                    const isBlocked = m.status_moderacao !== 'Aprovada';
+                    const div = document.createElement('div');
+                    // Simples verificação se é minha (O ideal é checar pelo ID real do usuário)
+                    div.className = `msg ${isBlocked ? 'blocked' : 'other'}`;
+                    div.innerHTML = `<strong>${m.enviou.nickname}</strong> ${m.conteudo_mensagem}`;
+                    box.appendChild(div);
+                });
+                box.scrollTop = box.scrollHeight;
+            } catch(e) { console.error(e); }
+        }
+
+        async function enviarMensagem() {
+            const input = document.getElementById('msgText');
+            const txt = input.value;
+            if(!txt || !salaAtual) return;
+
+            try {
+                const res = await fetch('http://localhost:3000/api/chat/mensagem', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ id_sala: salaAtual, conteudo: txt })
+                });
+                input.value = '';
+                carregarMensagens();
+            } catch(e) { console.error(e); }
+        }
+
+        // Carrega inicial
+        carregarOfertas();
+
+    </script>
+</body>
+</html>
