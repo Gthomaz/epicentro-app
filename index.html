@@ -166,7 +166,26 @@
             
             <input type="text" id="login-id" placeholder="CPF (Pai) ou Nickname (Filho)">
             <input type="password" id="login-pass" placeholder="Senha">
-            <button onclick="doLogin()" style="width: 100%;">Entrar na Fortaleza</button>
+            <button onclick="doLogin()" style="width: 100%; margin-bottom: 1rem;">Entrar na Fortaleza</button>
+            <p style="text-align: center; font-size: 0.9rem; color: #94a3b8;">Novo por aqui?</p>
+            <button class="btn-success" onclick="goToCadastro()" style="width: 100%; margin-top: 0.5rem;">Criar Conta do Pai</button>
+        </div>
+    </div>
+
+    <!-- ==================== TELA DE CADASTRO ==================== -->
+    <div id="view-cadastro" class="view hidden">
+        <div class="card-glass" style="max-width: 400px; margin-top: 5rem;">
+            <h2 class="title-gradient" style="text-align: center;">Registro do Mestre</h2>
+            <p style="text-align: center; margin-bottom: 2rem; color: #cbd5e1;">Crie a conta do Responsável</p>
+            
+            <input type="text" id="cad-nome" placeholder="Nome Completo">
+            <input type="text" id="cad-cpf" placeholder="CPF (Apenas números)">
+            <input type="email" id="cad-email" placeholder="E-mail principal">
+            <input type="text" id="cad-tel" placeholder="Telefone com DDD">
+            <input type="password" id="cad-pass" placeholder="Senha Segura">
+            
+            <button onclick="doCadastro()" style="width: 100%; margin-bottom: 1rem;" class="btn-success">Cadastrar Fortaleza</button>
+            <button onclick="voltarLogin()" style="width: 100%; background: transparent; border: 1px solid var(--glass-border);">Voltar ao Login</button>
         </div>
     </div>
 
@@ -204,7 +223,13 @@
                     <p style="color: #94a3b8; margin-bottom: 1rem; font-size: 0.9rem;">R$ 1,00 = 100 Moedas Virtuais</p>
                     <input type="number" id="mesada-id-filho" placeholder="ID do Filho (Dependente)">
                     <input type="number" id="mesada-valor" placeholder="Valor em R$ para transferir">
-                    <button onclick="transferirMesada()" style="background: linear-gradient(135deg, #f59e0b, #d97706);">Transferir Moedas</button>
+                    <button onclick="transferirMesada()" style="background: linear-gradient(135deg, #f59e0b, #d97706); margin-bottom: 2rem;">Transferir Moedas</button>
+
+                    <h3>Cadastrar Novo Filho</h3>
+                    <p style="color: #94a3b8; margin-bottom: 1rem; font-size: 0.9rem;">Crie a conta para a criança jogar.</p>
+                    <input type="text" id="filho-nick" placeholder="Nickname (Ex: joaozinho_10)">
+                    <input type="password" id="filho-pass" placeholder="Senha da Criança">
+                    <button class="btn-success" onclick="cadastrarFilho()">Criar Dependente</button>
                 </div>
             </div>
         </div>
@@ -342,6 +367,7 @@
         function checkAuth() {
             if (appState.token && appState.role) {
                 document.getElementById('view-login').classList.add('hidden');
+                document.getElementById('view-cadastro').classList.add('hidden');
                 if (appState.role === 'master') {
                     document.getElementById('view-master').classList.remove('hidden');
                     initMaster();
@@ -351,6 +377,7 @@
                 }
             } else {
                 document.getElementById('view-login').classList.remove('hidden');
+                document.getElementById('view-cadastro').classList.add('hidden');
                 document.getElementById('view-master').classList.add('hidden');
                 document.getElementById('view-dependente').classList.add('hidden');
             }
@@ -399,6 +426,40 @@
         }
 
         // ================= LÓGICA DE LOGIN =================
+        function goToCadastro() {
+            document.getElementById('view-login').classList.add('hidden');
+            document.getElementById('view-cadastro').classList.remove('hidden');
+        }
+
+        function voltarLogin() {
+            document.getElementById('view-cadastro').classList.add('hidden');
+            document.getElementById('view-login').classList.remove('hidden');
+        }
+
+        async function doCadastro() {
+            const nome = document.getElementById('cad-nome').value;
+            const cpf = document.getElementById('cad-cpf').value;
+            const email = document.getElementById('cad-email').value;
+            const tel = document.getElementById('cad-tel').value;
+            const pass = document.getElementById('cad-pass').value;
+
+            try {
+                const res = await fetch(`${API}/auth/register-master`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome_completo: nome, cpf, email, telefone: tel, senha: pass })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erro ao cadastrar');
+                
+                alert('Conta Mestre criada com sucesso! Você ganhou R$ 500,00 de saldo inicial!');
+                voltarLogin();
+                document.getElementById('login-id').value = cpf;
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
         async function doLogin() {
             const doc = document.getElementById('login-id').value;
             const pass = document.getElementById('login-pass').value;
@@ -463,6 +524,17 @@
                 document.getElementById('mesada-valor').value = '';
                 carregarSaldoPai();
                 alert('Mesada transferida com sucesso!');
+            } catch(e) {}
+        }
+
+        async function cadastrarFilho() {
+            const nick = document.getElementById('filho-nick').value;
+            const pass = document.getElementById('filho-pass').value;
+            try {
+                const res = await fetchAPI('/auth/register-dependente', 'POST', { nickname: nick, senha: pass });
+                alert(`Dependente criado! O ID dele para transferência é: ${res.usuario.id_dependente}`);
+                document.getElementById('filho-nick').value = '';
+                document.getElementById('filho-pass').value = '';
             } catch(e) {}
         }
 
