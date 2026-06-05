@@ -111,9 +111,9 @@ app.post('/api/cadastro/responsavel', async (req: Request, res: Response): Promi
             dados: { pai: paiSemSenha, filho: filhoSemSenha }
         });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error(error);
-        return res.status(500).json({ error: "Erro interno ao processar o cadastro de segurança." });
+        return res.status(500).json({ error: "Erro interno: " + (error.message || String(error)) });
     }
 });
 
