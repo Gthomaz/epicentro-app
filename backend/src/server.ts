@@ -10,8 +10,8 @@ const dbUrl = process.env.DATABASE_URL || 'file:./dev.db';
 const dbAuthToken = process.env.DATABASE_AUTH_TOKEN; // Necessário para Turso em prod
 
 const libsql = createClient({
-  url: dbUrl,
-  authToken: dbAuthToken
+    url: process.env.TURSO_DATABASE_URL || "libsql://epicentro-db-gthomaz.aws-ap-south-1.turso.io",
+    authToken: process.env.TURSO_AUTH_TOKEN || "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODA1OTMzMzAsImlkIjoiMDE5ZTkzYTEtM2QwMS03NmYyLTllNzUtNTM2NzkwY2ViMmQxIiwicmlkIjoiOWZhNjI2MDktODA0YS00NDliLWJkNmYtNmIxMDE0OTgxN2Y5In0.twobXMkDTYaxjgcdPDRyStElxmcWVe4Eb6g1NaZXkvsd8rtnWiUWaa3VxCf-bR8RW_xMVB-iGL--kh7-5_vGCA"
 });
 
 const adapter = new PrismaLibSql(libsql as any);
