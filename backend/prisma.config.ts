@@ -9,6 +9,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    url: process.env["DATABASE_URL"] || "libsql://epicentro-db-gthomaz.aws-ap-south-1.turso.io",
   },
 });

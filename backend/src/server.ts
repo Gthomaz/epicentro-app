@@ -12,12 +12,10 @@ const dbAuthToken = process.env.DATABASE_AUTH_TOKEN; // Necessário para Turso e
 // O Prisma Engine interno exige a variável DATABASE_URL definida, mesmo usando o adapter JS
 process.env.DATABASE_URL = "libsql://epicentro-db-gthomaz.aws-ap-south-1.turso.io";
 
-const libsql = createClient({
+const adapter = new PrismaLibSql({
     url: "libsql://epicentro-db-gthomaz.aws-ap-south-1.turso.io",
     authToken: "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODA1OTMzMzAsImlkIjoiMDE5ZTkzYTEtM2QwMS03NmYyLTllNzUtNTM2NzkwY2ViMmQxIiwicmlkIjoiOWZhNjI2MDktODA0YS00NDliLWJkNmYtNmIxMDE0OTgxN2Y5In0.twobXMkDTYaxjgcdPDRyStElxmcWVe4Eb6g1NaZXkvsd8rtnWiUWaa3VxCf-bR8RW_xMVB-iGL--kh7-5_vGCA"
 });
-
-const adapter = new PrismaLibSql(libsql as any);
 const prisma = new PrismaClient({ adapter });
 
 const app = express();
