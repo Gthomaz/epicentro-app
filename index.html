@@ -246,6 +246,22 @@
                     <button onclick="transferirMesada()" style="background: linear-gradient(135deg, #f59e0b, #d97706); margin-bottom: 2rem;">Transferir Moedas</button>
                 </div>
             </div>
+            
+            <div style="border-top: 1px solid var(--glass-border); padding-top: 2rem; margin-top: 1rem;">
+                <h3>Cadastrar Novo Filho</h3>
+                <p style="color: #94a3b8; margin-bottom: 1rem; font-size: 0.9rem;">Adicione mais crianças à sua Fortaleza.</p>
+                <div class="grid-2">
+                    <div>
+                        <input type="text" id="add-nick-filho" placeholder="Nickname do Filho (ex: Pedrinho)">
+                        <input type="password" id="add-pass-filho" placeholder="Senha da Criança">
+                    </div>
+                    <div>
+                        <label style="font-size:0.8rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">Data de Nascimento</label>
+                        <input type="date" id="add-nasc-filho">
+                        <button onclick="cadastrarFilhoAdicional()" class="btn-success" style="width: 100%;">Adicionar Filho</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Tab: Segurança -->
@@ -545,6 +561,29 @@
                 document.getElementById('mesada-nickname-filho').value = '';
                 carregarSaldoPai();
                 alert('Mesada transferida com sucesso!');
+            } catch(e) {}
+        }
+
+        async function cadastrarFilhoAdicional() {
+            const nickname = document.getElementById('add-nick-filho').value;
+            const senha = document.getElementById('add-pass-filho').value;
+            const nasc = document.getElementById('add-nasc-filho').value;
+            
+            if(!nickname || !senha || !nasc) {
+                alert('Preencha todos os campos para cadastrar o filho!');
+                return;
+            }
+            
+            try {
+                await fetchAPI('/cadastro/dependente-adicional', 'POST', { 
+                    nickname_filho: nickname, 
+                    senha_filho: senha, 
+                    nascimento_filho: nasc 
+                });
+                document.getElementById('add-nick-filho').value = '';
+                document.getElementById('add-pass-filho').value = '';
+                document.getElementById('add-nasc-filho').value = '';
+                alert('Filho cadastrado com sucesso! Agora você pode transferir mesada para ele.');
             } catch(e) {}
         }
 

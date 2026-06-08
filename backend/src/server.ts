@@ -119,6 +119,51 @@ app.post('/api/cadastro/responsavel', async (req: Request, res: Response): Promi
 });
 
 // =========================================================================
+// ROTA DE SEGURANÇA: CADASTRAR FILHO ADICIONAL
+// =========================================================================
+app.post('/api/cadastro/dependente-adicional', authMiddleware, async (req: Request, res: Response): Promise<any> => {
+    const userId = (req as any).userId;
+    if ((req as any).userRole !== 'master') return res.status(403).json({ error: "Acesso restrito para pais." });
+
+    const { nickname_filho, senha_filho, nascimento_filho } = req.body;
+
+    if (!nickname_filho || !senha_filho || !nascimento_filho) {
+        return res.status(400).json({ error: "Todos os campos obrigatórios precisam ser preenchidos!" });
+    }
+
+    try {
+        const nicknameExistente = await prisma.usuarios_dependentes.findFirst({ where: { nickname: nickname_filho } });
+        if (nicknameExistente) {
+            return res.status(400).json({ error: "Este Nickname já está em uso por outra criança!" });
+        }
+
+        const hashedSenhaFilho = await bcrypt.hash(senha_filho, 10);
+
+        const novoDependente = await prisma.usuarios_dependentes.create({
+            data: {
+                id_master_fk: userId,
+                nickname: nickname_filho,
+                senha: hashedSenhaFilho,
+                data_nascimento: new Date(nascimento_filho),
+                moedas_virtuais: 0
+            }
+        });
+
+        const { senha: _, ...filhoSemSenha } = novoDependente;
+
+        return res.status(201).json({
+            message: "Novo filho adicionado com sucesso!",
+            filho: filhoSemSenha
+        });
+
+    } catch (error: any) {
+        console.error(error);
+        return res.status(500).json({ error: "Erro interno: " + (error.message || String(error)) });
+    }
+});
+
+
+// =========================================================================
 // ROTA DE LOGIN: RESPONSÁVEL (PAI)
 // =========================================================================
 app.post('/api/login/responsavel', async (req: Request, res: Response): Promise<any> => {
