@@ -6,19 +6,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.authMiddleware = void 0;
 const express_1 = __importDefault(require("express"));
 const adapter_libsql_1 = require("@prisma/adapter-libsql");
-const client_1 = require("@libsql/client");
-const client_2 = require("@prisma/client");
+const client_1 = require("@prisma/client");
 const cors_1 = __importDefault(require("cors"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dbUrl = process.env.DATABASE_URL || 'file:./dev.db';
 const dbAuthToken = process.env.DATABASE_AUTH_TOKEN; // Necessário para Turso em prod
-const libsql = (0, client_1.createClient)({
-    url: dbUrl,
-    authToken: dbAuthToken
+// O Prisma Engine interno exige a variável DATABASE_URL definida, mesmo usando o adapter JS
+process.env.DATABASE_URL = "libsql://epicentro-db-gthomaz.aws-ap-south-1.turso.io";
+const adapter = new adapter_libsql_1.PrismaLibSql({
+    url: "libsql://epicentro-db-gthomaz.aws-ap-south-1.turso.io",
+    authToken: "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODA1OTMzMzAsImlkIjoiMDE5ZTkzYTEtM2QwMS03NmYyLTllNzUtNTM2NzkwY2ViMmQxIiwicmlkIjoiOWZhNjI2MDktODA0YS00NDliLWJkNmYtNmIxMDE0OTgxN2Y5In0.twobXMkDTYaxjgcdPDRyStElxmcWVe4Eb6g1NaZXkvsd8rtnWiUWaa3VxCf-bR8RW_xMVB-iGL--kh7-5_vGCA"
 });
-const adapter = new adapter_libsql_1.PrismaLibSql(libsql);
-const prisma = new client_2.PrismaClient({ adapter });
+const prisma = new client_1.PrismaClient({ adapter });
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
@@ -102,7 +102,7 @@ app.post('/api/cadastro/responsavel', async (req, res) => {
     }
     catch (error) {
         console.error(error);
-        return res.status(500).json({ error: "Erro interno ao processar o cadastro de segurança." });
+        return res.status(500).json({ error: "Erro interno: " + (error.message || String(error)) });
     }
 });
 // =========================================================================
@@ -594,13 +594,17 @@ app.post('/api/financeiro/transferir-mesada', exports.authMiddleware, async (req
     const userId = req.userId;
     if (req.userRole !== 'master')
         return res.status(403).json({ error: "Acesso restrito para pais." });
-    const { id_dependente, valor_reais } = req.body;
-    if (!valor_reais || valor_reais <= 0)
-        return res.status(400).json({ error: "Valor inválido." });
+    const { nickname_dependente, valor_reais } = req.body;
+    if (!valor_reais || valor_reais <= 0 || !nickname_dependente)
+        return res.status(400).json({ error: "Valor ou nickname inválido." });
     try {
         const pai = await prisma.usuarios_master.findUnique({ where: { id_master: userId } });
         if (!pai || Number(pai.saldo_reais) < valor_reais) {
             return res.status(400).json({ error: "Saldo insuficiente." });
+        }
+        const dependente = await prisma.usuarios_dependentes.findFirst({ where: { nickname: nickname_dependente, id_master_fk: userId } });
+        if (!dependente) {
+            return res.status(400).json({ error: "Filho(a) não encontrado(a) com este nickname." });
         }
         const moedasConvertidas = valor_reais * 100;
         await prisma.$transaction(async (tx) => {
@@ -610,13 +614,10 @@ app.post('/api/financeiro/transferir-mesada', exports.authMiddleware, async (req
                 data: { saldo_reais: { decrement: valor_reais } }
             });
             // Credita na carteira digital da criança
-            let dependente = await tx.usuarios_dependentes.findUnique({ where: { id_dependente } });
-            if (dependente) {
-                await tx.usuarios_dependentes.update({
-                    where: { id_dependente },
-                    data: { moedas_virtuais: { increment: moedasConvertidas } }
-                });
-            }
+            await tx.usuarios_dependentes.update({
+                where: { id_dependente: dependente.id_dependente },
+                data: { moedas_virtuais: { increment: moedasConvertidas } }
+            });
         });
         return res.json({ message: `Mesada de ${moedasConvertidas} moedas transferida com sucesso!` });
     }

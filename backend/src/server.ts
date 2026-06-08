@@ -652,13 +652,18 @@ app.post('/api/financeiro/transferir-mesada', authMiddleware, async (req: Reques
     const userId = (req as any).userId;
     if ((req as any).userRole !== 'master') return res.status(403).json({ error: "Acesso restrito para pais." });
 
-    const { id_dependente, valor_reais } = req.body;
-    if (!valor_reais || valor_reais <= 0) return res.status(400).json({ error: "Valor inválido." });
+    const { nickname_dependente, valor_reais } = req.body;
+    if (!valor_reais || valor_reais <= 0 || !nickname_dependente) return res.status(400).json({ error: "Valor ou nickname inválido." });
 
     try {
         const pai = await prisma.usuarios_master.findUnique({ where: { id_master: userId } });
         if (!pai || Number(pai.saldo_reais) < valor_reais) {
             return res.status(400).json({ error: "Saldo insuficiente." });
+        }
+
+        const dependente = await prisma.usuarios_dependentes.findFirst({ where: { nickname: nickname_dependente, id_master_fk: userId } });
+        if (!dependente) {
+            return res.status(400).json({ error: "Filho(a) não encontrado(a) com este nickname." });
         }
 
         const moedasConvertidas = valor_reais * 100;
@@ -671,13 +676,10 @@ app.post('/api/financeiro/transferir-mesada', authMiddleware, async (req: Reques
             });
 
             // Credita na carteira digital da criança
-            let dependente = await tx.usuarios_dependentes.findUnique({ where: { id_dependente } });
-            if (dependente) {
-                await tx.usuarios_dependentes.update({
-                    where: { id_dependente },
-                    data: { moedas_virtuais: { increment: moedasConvertidas } }
-                });
-            }
+            await tx.usuarios_dependentes.update({
+                where: { id_dependente: dependente.id_dependente },
+                data: { moedas_virtuais: { increment: moedasConvertidas } }
+            });
         });
 
         return res.json({ message: `Mesada de ${moedasConvertidas} moedas transferida com sucesso!` });

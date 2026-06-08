@@ -7,7 +7,7 @@ const authToken = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3
 
 async function pushSchema() {
     const db = createClient({ url, authToken });
-    const schemaPath = path.join(__dirname, 'turso-schema.sql');
+    const schemaPath = path.join(__dirname, 'turso-schema-fixed.sql');
     const sql = fs.readFileSync(schemaPath, 'utf-8');
     
     const statements = sql.split(';').map(s => s.trim()).filter(s => s.length > 0);
