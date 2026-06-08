@@ -250,16 +250,17 @@
             <div style="border-top: 1px solid var(--glass-border); padding-top: 2rem; margin-top: 1rem;">
                 <h3>Cadastrar Novo Filho</h3>
                 <p style="color: #94a3b8; margin-bottom: 1rem; font-size: 0.9rem;">Adicione mais crianças à sua Fortaleza.</p>
-                <div class="grid-2">
-                    <div>
-                        <input type="text" id="add-nick-filho" placeholder="Nickname do Filho (ex: Pedrinho)">
-                        <input type="password" id="add-pass-filho" placeholder="Senha da Criança">
-                    </div>
-                    <div>
-                        <label style="font-size:0.8rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">Data de Nascimento</label>
-                        <input type="date" id="add-nasc-filho">
-                        <button onclick="cadastrarFilhoAdicional()" class="btn-success" style="width: 100%;">Adicionar Filho</button>
-                    </div>
+                <div style="max-width: 400px; margin: 0 auto; text-align: left;">
+                    <label style="font-size:0.8rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">Nickname da Criança</label>
+                    <input type="text" id="add-nick-filho" placeholder="Ex: Pedrinho" style="margin-bottom: 1rem;">
+                    
+                    <label style="font-size:0.8rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">Senha de Acesso</label>
+                    <input type="password" id="add-pass-filho" placeholder="Senha" style="margin-bottom: 1rem;">
+                    
+                    <label style="font-size:0.8rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">Data de Nascimento</label>
+                    <input type="date" id="add-nasc-filho" style="margin-bottom: 1rem;">
+                    
+                    <button onclick="cadastrarFilhoAdicional()" class="btn-success" style="width: 100%;">Adicionar Filho à Família</button>
                 </div>
             </div>
         </div>
