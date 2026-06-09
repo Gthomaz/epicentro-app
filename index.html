@@ -446,9 +446,14 @@
     <!-- ==================== AMBIENTE DO PAI (MASTER) ==================== -->
     <div id="view-master" class="view hidden">
         <div class="card-glass dashboard-header">
-            <div>
-                <h1 class="title-gradient">Painel de Controle - Responsável</h1>
-                <p>Bem-vindo, <span id="master-name">...</span></p>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div class="avatar-container" onclick="document.getElementById('avatar-upload').click()" style="width: 50px; height: 50px; border-radius: 50%; overflow: hidden; background: #333; cursor: pointer; border: 2px solid #4ade80;">
+                    <img id="master-avatar" src="https://via.placeholder.com/50?text=Foto" style="width:100%; height:100%; object-fit:cover;">
+                </div>
+                <div>
+                    <h1 class="title-gradient">Painel de Controle - Responsável</h1>
+                    <p>Bem-vindo, <span id="master-name" style="font-weight:bold;">...</span></p>
+                </div>
             </div>
             <div class="balance-badge">
                 <span style="font-size: 1rem; color: #cbd5e1;">Saldo:</span> 
@@ -536,9 +541,14 @@
     <!-- ==================== AMBIENTE DA CRIANÇA (DEPENDENTE) ==================== -->
     <div id="view-dependente" class="view hidden">
         <div class="card-glass dashboard-header" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255,255,255,0.1);">
-            <div>
-                <h1 class="title-gradient" style="background: linear-gradient(to right, #ec4899, #8b5cf6); -webkit-background-clip: text;">Meu Espaço Jovem</h1>
-                <p>Olá, <span id="dep-name" style="font-weight:bold; color: #ec4899;">...</span>!</p>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div class="avatar-container" onclick="document.getElementById('avatar-upload').click()" style="width: 50px; height: 50px; border-radius: 50%; overflow: hidden; background: #333; cursor: pointer; border: 2px solid #ec4899;">
+                    <img id="dep-avatar" src="https://via.placeholder.com/50?text=Foto" style="width:100%; height:100%; object-fit:cover;">
+                </div>
+                <div>
+                    <h1 class="title-gradient" style="background: linear-gradient(to right, #ec4899, #8b5cf6); -webkit-background-clip: text;">Meu Espaço Jovem</h1>
+                    <p>Olá, <span id="dep-name" style="font-weight:bold; color: #ec4899;">...</span>!</p>
+                </div>
             </div>
             <div class="balance-badge" style="border-color: #fbbf24;">
                 <span style="font-size: 1rem; color: #cbd5e1;">Moedas:</span> 
@@ -581,8 +591,12 @@
                 <!-- Criar Oferta -->
                 <div>
                     <h3>Criar Oferta na Feira</h3>
-                    <input type="number" id="oferece-id" placeholder="ID da Repetida (Dou)">
-                    <input type="number" id="quer-id" placeholder="ID da Desejada (Quero)">
+                    <select id="oferece-id" style="width: 100%; padding: 0.8rem; border-radius: 8px; margin-bottom: 0.5rem; background: rgba(0,0,0,0.5); color: #fff; border: 1px solid var(--glass-border);">
+                        <option value="">Carregando Repetidas...</option>
+                    </select>
+                    <select id="quer-id" style="width: 100%; padding: 0.8rem; border-radius: 8px; margin-bottom: 1rem; background: rgba(0,0,0,0.5); color: #fff; border: 1px solid var(--glass-border);">
+                        <option value="">Carregando Faltantes...</option>
+                    </select>
                     <button onclick="criarOfertaGlobal()">Lançar na Feira</button>
                     
                     <h3 style="margin-top: 2rem;">Ofertas do Mundo</h3>
@@ -633,19 +647,43 @@
     <script>
         const API = 'https://epicentro-api.onrender.com/api';
         
-        // Estado
-        let appState = {
+        const appState = {
             token: localStorage.getItem('token'),
             role: localStorage.getItem('role'),
+            user: null,
+            inventario: [],
+            meuAlbum: [],
             salaChatAtiva: null,
-            novasCartas: []
+            novasCartas: [],
+            // Flipbook Album
+            albumCatalogo: [],
+            albumFases: [],
+            paginaAtual: 0
         };
 
+        const flipSound = new Audio('https://www.soundjay.com/misc/sounds/page-flip-01a.mp3');
+
         // ================= ROTAS DE NAVEGAÇÃO INTERNA =================
-        function checkAuth() {
+        async function checkAuth() {
             if (appState.token && appState.role) {
                 document.getElementById('view-login').classList.add('hidden');
                 document.getElementById('view-cadastro').classList.add('hidden');
+                
+                try {
+                    const res = await fetchAPI('/auth/me');
+                    appState.user = res.user;
+                    if (appState.role === 'master') {
+                        document.getElementById('master-name').innerText = appState.user.nome_completo;
+                        if(appState.user.foto_perfil) document.getElementById('master-avatar').src = appState.user.foto_perfil;
+                    } else {
+                        document.getElementById('dep-name').innerText = appState.user.nickname;
+                        if(appState.user.foto_perfil) document.getElementById('dep-avatar').src = appState.user.foto_perfil;
+                    }
+                } catch(e) {
+                    logout();
+                    return;
+                }
+
                 if (appState.role === 'master') {
                     document.getElementById('view-master').classList.remove('hidden');
                     initMaster();
@@ -703,6 +741,55 @@
             }
         }
 
+        // Avatar Upload UI (Input Oculto)
+        const avatarInput = document.createElement('input');
+        avatarInput.type = 'file';
+        avatarInput.id = 'avatar-upload';
+        avatarInput.accept = 'image/*';
+        avatarInput.style.display = 'none';
+        document.body.appendChild(avatarInput);
+
+        avatarInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = async function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    const MAX_WIDTH = 200;
+                    const MAX_HEIGHT = 200;
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > height) {
+                        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                    } else {
+                        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const base64Image = canvas.toDataURL('image/jpeg', 0.8);
+                    
+                    try {
+                        const data = await fetchAPI('/perfil/upload-foto', 'POST', { base64Image });
+                        alert(data.message);
+                        if (appState.role === 'master') document.getElementById('master-avatar').src = base64Image;
+                        else document.getElementById('dep-avatar').src = base64Image;
+                    } catch(err) {
+                        alert("Erro ao salvar foto!");
+                    }
+                }
+                img.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        });
+
         // ================= LÓGICA DE LOGIN =================
         function goToCadastro() {
             document.getElementById('view-login').classList.add('hidden');
@@ -748,7 +835,6 @@
             const doc = document.getElementById('login-id').value;
             const pass = document.getElementById('login-pass').value;
             try {
-                // Tenta como Master
                 let res = await fetch(`${API}/login/responsavel`, {
                     method:'POST', headers:{'Content-Type':'application/json'},
                     body: JSON.stringify({ cpf: doc, senha: pass })
@@ -756,7 +842,6 @@
                 let data = await res.json();
 
                 if(!res.ok) {
-                    // Tenta como Dependente
                     res = await fetch(`${API}/login/dependente`, {
                         method:'POST', headers:{'Content-Type':'application/json'},
                         body: JSON.stringify({ nickname: doc, senha: pass })
@@ -769,10 +854,6 @@
                 localStorage.setItem('role', data.user.role);
                 appState.token = data.token; appState.role = data.user.role;
                 
-                // Armazena nome provisório
-                if(data.user.role === 'master') document.getElementById('master-name').innerText = data.user.nome_completo;
-                else document.getElementById('dep-name').innerText = data.user.nickname;
-
                 checkAuth();
             } catch(e) { alert(e.message); }
         }
@@ -1013,23 +1094,101 @@
 
         async function carregarAlbum() {
             try {
-                // Restauramos a chamada real da API para exibir as cartas que o usuário de fato possui
-                const data = await fetchAPI('/album/meu-album');
-                const cont = document.getElementById('album-container');
-                cont.innerHTML = '';
+                // 1. Carrega todas as figurinhas que o usuário tem
+                const resAlbum = await fetchAPI('/album/meu-album');
+                appState.meuAlbum = resAlbum.album || [];
                 
-                data.album.forEach(reg => {
-                    const fig = reg.figurinha;
-                    // Busca dados ricos (mock) baseados no nome do jogador ou usa um fallback
+                // 2. Carrega o catálogo completo se ainda não carregou
+                if (appState.albumCatalogo.length === 0) {
+                    const resCat = await fetchAPI('/album/catalogo');
+                    appState.albumCatalogo = resCat.catalogo || [];
+                }
+
+                // 3. Agrupa por Fase
+                const fasesMap = {};
+                appState.albumCatalogo.forEach(fig => {
+                    const f = fig.fase_grupo || 'Fase 1';
+                    if (!fasesMap[f]) fasesMap[f] = [];
+                    fasesMap[f].push(fig);
+                });
+                
+                appState.albumFases = Object.keys(fasesMap).sort(); // ['Fase 1', 'Fase 2', ...]
+                
+                renderizarPaginaAlbum();
+            } catch(e) {
+                console.error("Erro ao carregar o álbum da Copa", e);
+            }
+        }
+
+        function mudarPaginaAlbum(dir) {
+            const max = appState.albumFases.length - 1;
+            let novaPagina = appState.paginaAtual + dir;
+            if(novaPagina < 0) novaPagina = 0;
+            if(novaPagina > max) novaPagina = max;
+            
+            if(novaPagina !== appState.paginaAtual) {
+                appState.paginaAtual = novaPagina;
+                flipSound.currentTime = 0;
+                flipSound.play().catch(e=>console.log(e));
+                
+                const cont = document.getElementById('album-container');
+                cont.style.transform = dir > 0 ? 'rotateY(-90deg)' : 'rotateY(90deg)';
+                cont.style.opacity = '0';
+                
+                setTimeout(() => {
+                    renderizarPaginaAlbum();
+                    cont.style.transform = 'rotateY(0)';
+                    cont.style.opacity = '1';
+                }, 300);
+            }
+        }
+
+        function renderizarPaginaAlbum() {
+            const cont = document.getElementById('album-container');
+            const tituloFase = document.getElementById('album-titulo-fase');
+            
+            if(!tituloFase) {
+                // Cria os controles se não existirem
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem; background: rgba(0,0,0,0.5); padding: 1rem; border-radius: 12px;">
+                        <button onclick="mudarPaginaAlbum(-1)" style="padding: 0.5rem 1rem; border-radius: 8px;">⬅️ Anterior</button>
+                        <h2 id="album-titulo-fase" style="margin:0; color:#fbbf24; font-size:1.5rem;">Fase</h2>
+                        <button onclick="mudarPaginaAlbum(1)" style="padding: 0.5rem 1rem; border-radius: 8px;">Próxima ➡️</button>
+                    </div>
+                    <div id="album-grid" class="album-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; justify-items: center; transition: all 0.3s ease;"></div>
+                `;
+                cont.parentNode.insertBefore(wrapper, cont);
+                cont.style.display = 'none'; // Oculta o original antigo
+                cont.id = 'album-container-old'; // Remove o ID antigo
+                wrapper.querySelector('#album-grid').id = 'album-container'; // Adota o ID no novo grid
+                renderizarPaginaAlbum();
+                return;
+            }
+
+            const faseAtual = appState.albumFases[appState.paginaAtual];
+            document.getElementById('album-titulo-fase').innerText = faseAtual;
+            
+            // Pega as figurinhas da fase
+            const figurasDaFase = appState.albumCatalogo.filter(f => f.fase_grupo === faseAtual);
+            cont.innerHTML = '';
+            
+            figurasDaFase.forEach(fig => {
+                // Checa se o usuário tem
+                const registro = appState.meuAlbum.find(r => r.figurinha.id_figurinha === fig.id_figurinha);
+                
+                const cardElement = document.createElement("div");
+                
+                if (registro) {
+                    // Renderiza a figurinha normal
                     const extras = dadosFigurinhas.find(d => d.nome === fig.nome_jogador) || dadosFigurinhas[0];
                     const avatarImg = (extras.avatar || fig.imagem).replace(/^\//, '');
 
-                    const cardElement = document.createElement("div");
                     cardElement.className = "sticker-card";
                     cardElement.setAttribute("onclick", "this.classList.toggle('flipped')");
 
                     cardElement.innerHTML = `
-                        ${reg.quantidade > 1 ? '<div class="badge-qtd">' + reg.quantidade + '</div>' : ''}
+                        ${registro.quantidade > 1 ? '<div class="badge-qtd">' + registro.quantidade + 'x</div>' : ''}
                         <div class="card-inner">
                             <div class="card-front">
                                 <img src="${avatarImg}" alt="${fig.nome_jogador}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1;" onerror="this.src='https://via.placeholder.com/220x360?text=Craque'">
@@ -1065,11 +1224,29 @@
                             </div>
                         </div>
                     `;
-                    cont.appendChild(cardElement);
-                });
-            } catch(e) {
-                console.error("Erro ao carregar o álbum da Copa", e);
-            }
+                } else {
+                    // Renderiza um espaço VAZIO (Molde)
+                    cardElement.className = "sticker-card";
+                    cardElement.style.background = "rgba(255,255,255,0.05)";
+                    cardElement.style.border = "2px dashed rgba(255,255,255,0.2)";
+                    cardElement.style.boxShadow = "none";
+                    cardElement.style.display = "flex";
+                    cardElement.style.flexDirection = "column";
+                    cardElement.style.alignItems = "center";
+                    cardElement.style.justifyContent = "center";
+                    cardElement.style.cursor = "default";
+                    
+                    cardElement.innerHTML = `
+                        <div style="font-size: 3rem; opacity: 0.2;">❓</div>
+                        <div style="color: rgba(255,255,255,0.4); margin-top: 1rem; text-align: center;">
+                            <strong>${fig.nome_jogador}</strong><br>
+                            <span style="font-size: 0.8rem;">ID: ${fig.id_figurinha}</span>
+                        </div>
+                    `;
+                }
+                
+                cont.appendChild(cardElement);
+            });
         }
 
         async function comprarPacote() {
@@ -1252,6 +1429,7 @@
         async function criarOfertaGlobal() {
             const of = document.getElementById('oferece-id').value;
             const q = document.getElementById('quer-id').value;
+            if(!of || !q) return alert('Selecione ambas as figurinhas na lista!');
             try {
                 await fetchAPI('/trocas/criar-oferta', 'POST', { id_figurinha_ofertada: Number(of), id_figurinha_solicitada: Number(q) });
                 alert('Oferta lançada na Feira Global!');
@@ -1259,7 +1437,55 @@
             } catch(e) {}
         }
 
+        async function carregarSelectsFeira() {
+            try {
+                // 1. Carrega álbum e repetidas
+                const resAlbum = await fetchAPI('/album/meu-album');
+                appState.meuAlbum = resAlbum.album || [];
+                
+                const repetidas = appState.meuAlbum.filter(r => r.quantidade > 1);
+                const selOferece = document.getElementById('oferece-id');
+                selOferece.innerHTML = '<option value="">Selecione a figurinha que você DÁ</option>';
+                
+                repetidas.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r.figurinha.id_figurinha;
+                    opt.innerText = `Fase ${r.figurinha.fase_grupo} - ${r.figurinha.nome_jogador} (${r.quantidade}x)`;
+                    selOferece.appendChild(opt);
+                });
+
+                if(repetidas.length === 0) {
+                    selOferece.innerHTML = '<option value="">Você não possui figurinhas repetidas</option>';
+                    selOferece.disabled = true;
+                } else {
+                    selOferece.disabled = false;
+                }
+
+                // 2. Carrega catálogo e faltantes
+                const resCat = await fetchAPI('/album/catalogo');
+                const catalogo = resCat.catalogo || [];
+                
+                const selQuer = document.getElementById('quer-id');
+                selQuer.innerHTML = '<option value="">Selecione a figurinha que você QUER</option>';
+                
+                // Filtra as que não estão no meuAlbum
+                const tenhoIds = appState.meuAlbum.map(r => r.figurinha.id_figurinha);
+                const faltantes = catalogo.filter(c => !tenhoIds.includes(c.id_figurinha));
+                
+                faltantes.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id_figurinha;
+                    opt.innerText = `Fase ${c.fase_grupo} - ${c.nome_jogador}`;
+                    selQuer.appendChild(opt);
+                });
+
+            } catch(e) {
+                console.error('Erro ao preencher selects da feira:', e);
+            }
+        }
+
         async function carregarOfertasGlobais() {
+            carregarSelectsFeira(); // Sempre atualiza ao entrar na tab
             try {
                 const data = await fetchAPI('/trocas/feira-global');
                 const list = document.getElementById('lista-ofertas-global');

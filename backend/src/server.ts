@@ -214,6 +214,59 @@ app.post('/api/login/dependente', async (req: Request, res: Response): Promise<a
 });
 
 // =========================================================================
+// ROTA: CHECK AUTH (Atualizar dados do usuário no recarregamento)
+// =========================================================================
+app.get('/api/auth/me', authMiddleware, async (req: Request, res: Response): Promise<any> => {
+    const userId = (req as any).userId;
+    const userRole = (req as any).userRole;
+
+    try {
+        if (userRole === 'master') {
+            const usuario = await prisma.usuarios_master.findUnique({ where: { id_master: userId } });
+            if (!usuario) return res.status(404).json({ error: "Usuário não encontrado." });
+            const { senha: _, ...userSafe } = usuario;
+            return res.json({ user: { ...userSafe, role: 'master' } });
+        } else {
+            const usuario = await prisma.usuarios_dependentes.findUnique({ where: { id_dependente: userId } });
+            if (!usuario) return res.status(404).json({ error: "Usuário não encontrado." });
+            const { senha: _, ...userSafe } = usuario;
+            return res.json({ user: { ...userSafe, role: 'dependente' } });
+        }
+    } catch (error) {
+        return res.status(500).json({ error: "Erro ao buscar dados do usuário." });
+    }
+});
+
+// =========================================================================
+// ROTA: UPLOAD DE FOTO DE PERFIL (Base64)
+// =========================================================================
+app.post('/api/perfil/upload-foto', authMiddleware, async (req: Request, res: Response): Promise<any> => {
+    const userId = (req as any).userId;
+    const userRole = (req as any).userRole;
+    const { base64Image } = req.body;
+
+    if (!base64Image) return res.status(400).json({ error: "Imagem Base64 é obrigatória." });
+
+    try {
+        if (userRole === 'master') {
+            await prisma.usuarios_master.update({
+                where: { id_master: userId },
+                data: { foto_perfil: base64Image }
+            });
+        } else {
+            await prisma.usuarios_dependentes.update({
+                where: { id_dependente: userId },
+                data: { foto_perfil: base64Image }
+            });
+        }
+        return res.json({ message: "Foto de perfil atualizada com sucesso!", foto_perfil: base64Image });
+    } catch (error) {
+        console.error("Erro ao atualizar foto:", error);
+        return res.status(500).json({ error: "Erro ao atualizar foto de perfil." });
+    }
+});
+
+// =========================================================================
 // ROTA DO ÁLBUM: MEU ÁLBUM (Somente Crianças Autenticadas)
 // =========================================================================
 app.get('/api/album/meu-album', authMiddleware, async (req: Request, res: Response): Promise<any> => {
@@ -233,6 +286,21 @@ app.get('/api/album/meu-album', authMiddleware, async (req: Request, res: Respon
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: "Erro ao buscar álbum." });
+    }
+});
+
+// =========================================================================
+// ROTA DO CATÁLOGO: BUSCAR TODAS AS FIGURINHAS (Para Feira Global)
+// =========================================================================
+app.get('/api/album/catalogo', authMiddleware, async (req: Request, res: Response): Promise<any> => {
+    try {
+        const catalogo = await prisma.figurinhas_catalogo.findMany({
+            orderBy: [{ fase_grupo: 'asc' }, { id_figurinha: 'asc' }]
+        });
+        return res.json({ catalogo });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Erro ao buscar catálogo de figurinhas." });
     }
 });
 

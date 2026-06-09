@@ -16,6 +16,7 @@ model usuarios_master {
   status_kyc      String?   @default("Pendente") 
   wallet_saldo    Float?    @default(0) 
   saldo_reais     Decimal?  @default(0)
+  foto_perfil     String?   
   data_cadastro   DateTime? @default(now()) 
 
   // Relacionamentos Inversos
@@ -35,6 +36,7 @@ model usuarios_dependentes {
   senha           String
   data_nascimento DateTime  
   moedas_virtuais Int?      @default(0)
+  foto_perfil     String?
   data_cadastro   DateTime? @default(now()) 
 
   // Vínculo Obrigatório com o Pai (Cascade Delete ativo)
