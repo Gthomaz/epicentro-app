@@ -7,20 +7,22 @@ async function seed() {
     const db = createClient({ url, authToken });
     console.log('Iniciando seed no Turso...');
 
-    // Limpar
+    // Limpar álbuns (zerar para todo mundo) e trocas para evitar erro de Foreign Key
+    await db.execute('DELETE FROM autorizacoes_troca');
+    await db.execute('DELETE FROM usuarios_figurinhas');
     await db.execute('DELETE FROM figurinhas_catalogo');
 
     const figurinhas = [
-        { numero_album: 1, nome_jogador: 'Lionel Messi', fase_grupo: 1, raridade: 'Lendária', imagem: 'https://robohash.org/messi?set=set2&size=150x150' },
-        { numero_album: 2, nome_jogador: 'Cristiano Ronaldo', fase_grupo: 1, raridade: 'Lendária', imagem: 'https://robohash.org/cr7?set=set2&size=150x150' },
-        { numero_album: 3, nome_jogador: 'Neymar Jr', fase_grupo: 1, raridade: 'Rara', imagem: 'https://robohash.org/neymar?set=set2&size=150x150' },
-        { numero_album: 4, nome_jogador: 'Kylian Mbappé', fase_grupo: 1, raridade: 'Rara', imagem: 'https://robohash.org/mbappe?set=set2&size=150x150' },
-        { numero_album: 5, nome_jogador: 'Kevin De Bruyne', fase_grupo: 1, raridade: 'Rara', imagem: 'https://robohash.org/debruyne?set=set2&size=150x150' },
-        { numero_album: 6, nome_jogador: 'Vinícius Jr', fase_grupo: 1, raridade: 'Comum', imagem: 'https://robohash.org/vini?set=set2&size=150x150' },
-        { numero_album: 7, nome_jogador: 'Luka Modric', fase_grupo: 2, raridade: 'Comum', imagem: 'https://robohash.org/modric?set=set2&size=150x150' },
-        { numero_album: 8, nome_jogador: 'Erling Haaland', fase_grupo: 2, raridade: 'Rara', imagem: 'https://robohash.org/haaland?set=set2&size=150x150' },
-        { numero_album: 9, nome_jogador: 'Jude Bellingham', fase_grupo: 2, raridade: 'Comum', imagem: 'https://robohash.org/bellingham?set=set2&size=150x150' },
-        { numero_album: 10, nome_jogador: 'Alisson Becker', fase_grupo: 2, raridade: 'Comum', imagem: 'https://robohash.org/alisson?set=set2&size=150x150' },
+        { numero_album: 1, nome_jogador: 'Lionel Messi', fase_grupo: 1, raridade: 'Lendária', imagem: 'assets/figurinhas/messi_caricatura.png' },
+        { numero_album: 2, nome_jogador: 'Cristiano Ronaldo', fase_grupo: 1, raridade: 'Lendária', imagem: 'assets/figurinhas/cr7_caricatura.png' },
+        { numero_album: 3, nome_jogador: 'Neymar Jr', fase_grupo: 1, raridade: 'Rara', imagem: 'assets/figurinhas/ney_caricatura.png' },
+        { numero_album: 4, nome_jogador: 'Kylian Mbappé', fase_grupo: 1, raridade: 'Rara', imagem: 'assets/figurinhas/mbappe_caricatura.png' },
+        { numero_album: 5, nome_jogador: 'Kevin De Bruyne', fase_grupo: 1, raridade: 'Rara', imagem: 'assets/figurinhas/kdb_caricatura.png' },
+        { numero_album: 6, nome_jogador: 'Vinícius Jr', fase_grupo: 1, raridade: 'Comum', imagem: 'assets/figurinhas/vini_caricatura.png' },
+        { numero_album: 7, nome_jogador: 'Luka Modric', fase_grupo: 2, raridade: 'Comum', imagem: 'assets/figurinhas/modric_caricatura.png' },
+        { numero_album: 8, nome_jogador: 'Erling Haaland', fase_grupo: 2, raridade: 'Rara', imagem: 'assets/figurinhas/haaland_caricatura.png' },
+        { numero_album: 9, nome_jogador: 'Jude Bellingham', fase_grupo: 2, raridade: 'Comum', imagem: 'assets/figurinhas/bellingham_caricatura.png' },
+        { numero_album: 10, nome_jogador: 'Alisson Becker', fase_grupo: 2, raridade: 'Comum', imagem: 'assets/figurinhas/alisson_caricatura.png' },
     ];
 
     for (const fig of figurinhas) {

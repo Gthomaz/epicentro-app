@@ -98,54 +98,159 @@
 
         .album-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 24px;
             width: 100%;
             max-width: 1000px;
         }
 
-        .card {
-            background: var(--glass);
-            backdrop-filter: blur(8px);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 1rem;
-            text-align: center;
+        /* Estrutura do Card com efeito Flip 3D */
+        .card, .sticker-card {
+            background: transparent;
+            width: 220px;
+            height: 360px; /* Altura calibrada para caber tudo sem cortes */
+            perspective: 1000px;
+            cursor: pointer;
+            margin: 0 auto;
+        }
+
+        .card-inner {
             position: relative;
-            transition: all 0.3s ease;
-            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        /* Classe ativada via JS ao clicar */
+        .card.flipped .card-inner, .sticker-card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 16px;
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
+            box-sizing: border-box;
+            padding: 14px;
+        }
+
+        /* FRENTE: Estilo Dourado Lendário Glassmorphism */
+        .card-front {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 2px solid rgba(255, 215, 0, 0.7); /* Borda Dourada */
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.25), inset 0 0 15px rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .card-badge-country {
+            font-size: 0.75rem;
+            color: rgba(255, 215, 0, 0.9);
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .card-player-name {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin: 4px 0;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .card-avatar-box {
+            width: 110px;
+            height: 110px;
+            margin: 0 auto;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, rgba(0,0,0,0.4) 100%);
+            overflow: hidden;
+            display: flex;
             align-items: center;
-            aspect-ratio: 2.5 / 3.5;
             justify-content: center;
         }
 
-        .card:hover {
-            transform: translateY(-5px) rotate(2deg);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border-color: var(--primary);
-        }
-
-        .card img {
-            width: 100px;
-            height: 100px;
+        .card-avatar-box img {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
-            border-radius: 50%;
-            margin-bottom: 1rem;
-            background: #fff;
-            padding: 5px;
         }
 
-        .card h3 {
-            font-size: 1.1rem;
-            margin-bottom: 0.5rem;
-            font-weight: 800;
+        /* Grade de Atributos */
+        .card-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin: 10px 0;
         }
 
-        .card p {
-            font-size: 0.8rem;
-            color: #ccc;
+        .stat-box {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-value {
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: #22c55e; /* Verde para destaque */
+        }
+
+        .stat-label {
+            font-size: 0.6rem;
+            color: #a1a1aa;
+            text-transform: uppercase;
+        }
+
+        /* Rodapé com o Fato Completo - Blindado contra cortes */
+        .card-fact-footer {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 0.68rem;
+            line-height: 1.2;
+            color: #e4e4e7;
+            text-align: left;
+            border-top: 1px solid rgba(255, 215, 0, 0.3);
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+        }
+
+        /* VERSO: Trajetória e Biografia */
+        .card-back {
+            background: linear-gradient(135deg, rgba(20, 20, 35, 0.98) 0%, rgba(10, 10, 15, 0.98) 100%);
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            color: #e4e4e7;
+            transform: rotateY(180deg);
+            justify-content: flex-start;
+            text-align: left;
+        }
+
+        .card-back h3 {
+            font-size: 1rem;
+            color: rgba(255, 215, 0, 1);
+            margin-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+            padding-bottom: 4px;
+        }
+
+        .card-back p {
+            font-size: 0.75rem;
+            line-height: 1.4;
+            color: #d4d4d8;
         }
 
         .badge-raridade {
@@ -200,40 +305,76 @@
         }
 
         /* Animação do Pacotinho */
-        .pack-opening-anim {
-            width: 200px;
-            height: 300px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        /* ANIMACAO DO PACOTE PREMIUM */
+        .pack-anim {
+            width: 220px; height: 320px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
             border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            font-weight: 800;
-            color: white;
-            animation: shake 0.5s infinite;
+            border: 3px solid #FFF;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            font-size: 2rem; font-weight: 900; color: #FFF;
+            text-transform: uppercase;
             cursor: pointer;
-            box-shadow: 0 0 50px rgba(255, 65, 108, 0.8);
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.8), inset 0 0 20px rgba(255, 255, 255, 0.5);
+            animation: float-pack 2s ease-in-out infinite, pulse-glow 1.5s infinite alternate;
+            position: relative;
+            overflow: hidden;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+            transition: transform 0.3s;
         }
 
-        @keyframes shake {
-            0% { transform: rotate(0deg); }
-            25% { transform: rotate(5deg); }
-            50% { transform: rotate(0deg); }
-            75% { transform: rotate(-5deg); }
-            100% { transform: rotate(0deg); }
+        .pack-anim:hover {
+            transform: scale(1.05);
+        }
+        
+        .pack-anim::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.8), transparent);
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
         }
 
+        @keyframes float-pack {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(2deg); }
+        }
+
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.6); }
+            100% { box-shadow: 0 0 80px rgba(255, 215, 0, 1), 0 0 30px rgba(255, 140, 0, 0.8); }
+        }
+
+        @keyframes shine {
+            0% { left: -100%; top: -100%; }
+            100% { left: 100%; top: 100%; }
+        }
+
+        /* Animação de Explosão (aplicada via JS) */
+        .explode-anim {
+            animation: explode-pack 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+        }
+
+        @keyframes explode-pack {
+            0% { transform: scale(1); opacity: 1; filter: brightness(1); }
+            40% { transform: scale(1.2) rotate(-5deg); filter: brightness(1.5); }
+            60% { transform: scale(1.5) rotate(15deg); filter: brightness(2) drop-shadow(0 0 100px #fff); }
+            100% { transform: scale(3); opacity: 0; filter: brightness(3); }
+        }
+
+        /* Efeito das Cartas Caindo e Quicando */
         .card-reveal {
             opacity: 0;
-            transform: scale(0.5) translateY(50px);
-            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            transform: translateY(-200px) scale(0.1) rotate(-20deg);
+            animation: drop-bounce 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
 
-        @keyframes popIn {
+        @keyframes drop-bounce {
             to {
                 opacity: 1;
-                transform: scale(1) translateY(0);
+                transform: translateY(0) scale(1) rotate(0deg);
             }
         }
 
@@ -274,9 +415,9 @@
 
     <!-- Modal de Abertura de Pacotinho -->
     <div class="modal-overlay" id="modalOverlay">
-        <div class="pack-opening-anim" id="packAnim" onclick="revealCards()">RASGAR PACOTINHO!</div>
-        <div class="modal-content" id="modalContent"></div>
-        <button class="close-modal" id="closeModalBtn" onclick="closeModal()">Guardar Figurinhas</button>
+        <div id="pack-item" class="pack-anim">RASGAR PACOTINHO!</div>
+        <div class="modal-content" id="cards-reveal"></div>
+        <button class="close-modal" id="close-pack-btn" onclick="closeModal()">Guardar Figurinhas</button>
     </div>
 
     <script>
@@ -303,6 +444,119 @@
             }
         }
 
+        const dadosFigurinhas = [
+            {
+                id: "NEY-10",
+                nome: "Neymar Jr",
+                pais: "Brasil | Atacante",
+                avatar: "/assets/figurinhas/ney_caricatura.png",
+                habilidade: 99,
+                ousadia: 95,
+                drible: 98,
+                fato: "O mestre do drible e o dono da camisa 10 brasileira. Quando ele arranca, Quissamã segura o fôlego!",
+                biografia: "Nascido em Mogi das Cruzes, conquistou a América e a Europa com sua genialidade. É o maior artilheiro da história recente da seleção, conhecido pela ousadia mágica dentro de campo."
+            },
+            {
+                id: "MESSI-10",
+                nome: "Lionel Messi",
+                pais: "Argentina | Meio",
+                avatar: "/assets/figurinhas/messi_caricatura.png",
+                habilidade: 99,
+                ousadia: 90,
+                drible: 97,
+                fato: "O gênio dos gramados mundiais. Visão de jogo perfeita e precisão cirúrgica em cada passe.",
+                biografia: "Multicampeão mundial, considerado um dos maiores da história do futebol. Sua trajetória é marcada pela consistência genial, conquistas de Bolas de Ouro e liderança técnica incontestável."
+            },
+            {
+                id: "MODRIC-10",
+                nome: "Luka Modric",
+                pais: "Croácia | Meio",
+                avatar: "/assets/figurinhas/modric_caricatura.png",
+                habilidade: 95,
+                ousadia: 88,
+                drible: 92,
+                fato: "O maestro que dita o ritmo do jogo com elegância e passes de trivela milimétricos.",
+                biografia: "Liderou sua seleção a finais históricas de Copa do Mundo. Vencedor da Bola de Ouro, é o símbolo máximo de resiliência, longevidade e refino técnico no meio-campo europeu."
+            },
+            {
+                id: "CR7-07",
+                nome: "Cristiano Ronaldo",
+                pais: "Portugal | Atacante",
+                avatar: "/assets/figurinhas/cr7_caricatura.png",
+                habilidade: 98,
+                ousadia: 92,
+                drible: 90,
+                fato: "O Robozão não para! Uma máquina de fazer gols e quebrar recordes por onde passa.",
+                biografia: "Nascido na Madeira, se tornou um ícone global do esporte. Famoso por sua dedicação implacável aos treinos, força física incomparável e saltos estratosféricos. Siiiiii!"
+            },
+            {
+                id: "VINI-20",
+                nome: "Vinícius Jr",
+                pais: "Brasil | Atacante",
+                avatar: "/assets/figurinhas/vini_caricatura.png",
+                habilidade: 96,
+                ousadia: 98,
+                drible: 99,
+                fato: "Velocidade da luz e sorriso no rosto. O Baila Vini deixa os zagueiros europeus tontos.",
+                biografia: "Cria de São Gonçalo, explodiu para o mundo com sua velocidade estonteante. Vencedor da Champions, hoje é a principal arma ofensiva brasileira e símbolo de luta dentro e fora de campo."
+            },
+            {
+                id: "MBA-10",
+                nome: "Kylian Mbappé",
+                pais: "França | Atacante",
+                avatar: "/assets/figurinhas/mbappe_caricatura.png",
+                habilidade: 97,
+                ousadia: 90,
+                drible: 95,
+                fato: "O Tartaruga Ninja das arrancadas. Pode decidir um jogo de Copa em questão de segundos.",
+                biografia: "Um prodígio que já conquistou o mundo antes dos 20 anos. Mistura força física brutal com uma velocidade supersônica, sendo o pesadelo de qualquer defesa adversária."
+            },
+            {
+                id: "KDB-17",
+                nome: "Kevin De Bruyne",
+                pais: "Bélgica | Meio",
+                avatar: "/assets/figurinhas/kdb_caricatura.png",
+                habilidade: 96,
+                ousadia: 80,
+                drible: 88,
+                fato: "O garçom com GPS no pé. Encontra espaços que ninguém mais no estádio consegue ver.",
+                biografia: "Motor criativo de um dos maiores times da Inglaterra. Sua capacidade de colocar a bola exatamente onde quer faz dele o meio-campista mais temido da atualidade."
+            },
+            {
+                id: "BELLI-05",
+                nome: "Jude Bellingham",
+                pais: "Inglaterra | Meio",
+                avatar: "/assets/figurinhas/bellingham_caricatura.png",
+                habilidade: 94,
+                ousadia: 93,
+                drible: 91,
+                fato: "Comemoração de braços abertos! O jovem inglês que chegou como veterano e assumiu o protagonismo.",
+                biografia: "Uma ascensão meteórica no futebol europeu. Combina a classe dos camisas 10 clássicos com a intensidade dos modernos 'box-to-box'. Um talento geracional para o futuro da Inglaterra."
+            },
+            {
+                id: "HAALAND-09",
+                nome: "Erling Haaland",
+                pais: "Noruega | Atacante",
+                avatar: "/assets/figurinhas/haaland_caricatura.png",
+                habilidade: 95,
+                ousadia: 85,
+                drible: 80,
+                fato: "O Cometa Nórdico! Um ciborgue programado apenas para balançar as redes.",
+                biografia: "Impiedoso na grande área. Combina uma força estrondosa com precisão letal, destruindo recordes de artilharia em cada campeonato que disputa."
+            },
+            {
+                id: "ALISSON-01",
+                nome: "Alisson Becker",
+                pais: "Brasil | Goleiro",
+                avatar: "/assets/figurinhas/alisson_caricatura.png",
+                habilidade: 90,
+                ousadia: 80,
+                drible: 70,
+                fato: "A muralha brasileira. Calmo sob pressão e dono de reflexos inacreditáveis.",
+                biografia: "Goleiro titular da Seleção Brasileira por anos. Especialista no um contra um e também em distribuições rápidas de jogo. Já marcou até gol de cabeça!"
+            }
+        ];
+
         function renderAlbum(album) {
             const grid = document.getElementById('albumGrid');
             grid.innerHTML = '';
@@ -313,16 +567,54 @@
                 const fig = registro.figurinha;
                 coladas += registro.quantidade;
 
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `
-                    <div class="badge-raridade ${fig.raridade.toLowerCase().replace('é', 'e').replace('í','i')}">${fig.raridade}</div>
-                    ${registro.quantidade > 1 ? `<div class="badge-qtd">${registro.quantidade}</div>` : ''}
-                    <img src="${fig.imagem}" alt="${fig.nome_jogador}">
-                    <h3>${fig.nome_jogador}</h3>
-                    <p>Fase ${fig.fase_grupo} • #${fig.numero_album}</p>
+                const extras = dadosFigurinhas.find(d => d.nome === fig.nome_jogador) || dadosFigurinhas[0];
+                const avatarImg = extras.avatar || fig.imagem;
+
+                const cardElement = document.createElement("div");
+                cardElement.className = "sticker-card card";
+                cardElement.setAttribute("onclick", "this.classList.toggle('flipped')");
+
+                cardElement.innerHTML = `
+                    ${registro.quantidade > 1 ? '<div class="badge-qtd">' + registro.quantidade + '</div>' : ''}
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <span class="card-badge-country">${extras.pais}</span>
+                            <h4 class="card-player-name">${fig.nome_jogador}</h4>
+                            
+                            <div class="card-avatar-box">
+                                <img src="${avatarImg}" alt="${fig.nome_jogador}" onerror="this.src='https://via.placeholder.com/110?text=Craque'">
+                            </div>
+                            
+                            <div class="card-stats-grid">
+                                <div class="stat-box">
+                                    <div class="stat-value">${extras.habilidade}</div>
+                                    <div class="stat-label">Hab</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-value">${extras.ousadia}</div>
+                                    <div class="stat-label">Ous</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-value">${extras.drible}</div>
+                                    <div class="stat-label">Dri</div>
+                                </div>
+                            </div>
+                            
+                            <div class="card-fact-footer">
+                                <p><strong>Fato:</strong> ${extras.fato}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="card-back">
+                            <h3>${fig.nome_jogador}</h3>
+                            <p><strong>Trajetória:</strong> ${extras.biografia}</p>
+                            <p style="margin-top: auto; font-size: 0.6rem; color: rgba(255,215,0,0.6); text-align: center; width: 100%;">
+                                Epicentro Copa 2026 • Clique para virar
+                            </p>
+                        </div>
+                    </div>
                 `;
-                grid.appendChild(card);
+                grid.appendChild(cardElement);
             });
 
             document.getElementById('totalCards').innerText = coladas;
@@ -330,9 +622,9 @@
 
         async function startOpeningPack() {
             document.getElementById('modalOverlay').style.display = 'flex';
-            document.getElementById('packAnim').style.display = 'flex';
-            document.getElementById('modalContent').innerHTML = '';
-            document.getElementById('closeModalBtn').style.display = 'none';
+            document.getElementById('pack-item').style.display = 'flex';
+            document.getElementById('cards-reveal').innerHTML = '';
+            document.getElementById('close-pack-btn').classList.add('hidden');
 
             try {
                 const res = await fetch('http://localhost:3000/api/album/abrir-pacotinho', {
@@ -342,37 +634,72 @@
                 if(!res.ok) throw new Error('Erro ao abrir pacotinho');
                 
                 const data = await res.json();
-                newCardsData = data.figurinhas;
+                revealCards(data.figurinhas);
             } catch(e) {
                 alert('Erro ao abrir o pacotinho! Tente novamente.');
                 closeModal();
             }
         }
 
-        function revealCards() {
-            if(newCardsData.length === 0) return; // Ainda carregando
+        function revealCards(newCardsData) {
+            const packItem = document.getElementById('pack-item');
 
-            document.getElementById('packAnim').style.display = 'none';
-            const container = document.getElementById('modalContent');
-            
-            newCardsData.forEach((fig, index) => {
+            packItem.onclick = () => {
+                packItem.classList.add('explode-anim');
+
                 setTimeout(() => {
-                    const card = document.createElement('div');
-                    card.className = 'card card-reveal';
-                    card.innerHTML = `
-                        <div class="badge-raridade ${fig.raridade.toLowerCase().replace('é', 'e').replace('í','i')}">${fig.raridade}</div>
-                        ${!fig.is_nova ? `<div class="badge-qtd">Repetida!</div>` : '<div class="badge-qtd" style="background:#10b981; width:auto; padding:0 5px;">Nova!</div>'}
-                        <img src="${fig.imagem}" alt="${fig.nome_jogador}">
-                        <h3>${fig.nome_jogador}</h3>
-                        <p>Fase ${fig.fase_grupo} • #${fig.numero_album}</p>
-                    `;
-                    container.appendChild(card);
-                }, index * 400); // Aparecem uma a uma
-            });
+                    packItem.style.display = 'none';
+                    packItem.classList.remove('explode-anim');
 
-            setTimeout(() => {
-                document.getElementById('closeModalBtn').style.display = 'block';
-            }, newCardsData.length * 400 + 500);
+                    const container = document.getElementById('cards-reveal');
+                    container.innerHTML = '';
+                    container.style.display = 'grid';
+                    
+                    newCardsData.forEach((fig, index) => {
+                        const extras = dadosFigurinhas.find(d => d.nome === fig.nome_jogador) || dadosFigurinhas[0];
+                        const avatarImg = (extras.avatar || fig.imagem).replace(/^\//, '');
+
+                        setTimeout(() => {
+                            const cardElement = document.createElement("div");
+                            cardElement.className = "sticker-card card-reveal";
+                            cardElement.setAttribute("onclick", "this.classList.toggle('flipped')");
+
+                            cardElement.innerHTML = `
+                                <div class="badge-qtd" style="background:${fig.is_nova ? '#10b981' : '#f59e0b'}; font-size:0.6rem; width:auto; padding:0 5px; right:10px; top:10px; z-index:10;">${fig.is_nova ? 'Nova!' : 'Repetida'}</div>
+                                <div class="card-inner">
+                                    <div class="card-front">
+                                        <span class="card-badge-country">${extras.pais}</span>
+                                        <h4 class="card-player-name">${fig.nome_jogador}</h4>
+                                        
+                                        <div class="card-avatar-box">
+                                            <img src="${avatarImg}" alt="${fig.nome_jogador}" onerror="this.src='https://via.placeholder.com/110?text=Craque'">
+                                        </div>
+                                        
+                                        <div class="card-stats-grid">
+                                            <div class="stat-box"><div class="stat-value">${extras.habilidade}</div><div class="stat-label">Hab</div></div>
+                                            <div class="stat-box"><div class="stat-value">${extras.ousadia}</div><div class="stat-label">Ous</div></div>
+                                            <div class="stat-box"><div class="stat-value">${extras.drible}</div><div class="stat-label">Dri</div></div>
+                                        </div>
+                                        
+                                        <div class="card-fact-footer"><p><strong>Fato:</strong> ${extras.fato}</p></div>
+                                    </div>
+                                    
+                                    <div class="card-back">
+                                        <h3>${fig.nome_jogador}</h3>
+                                        <p><strong>Trajetória:</strong> ${extras.biografia}</p>
+                                        <p style="margin-top: auto; font-size: 0.6rem; color: rgba(255,215,0,0.6); text-align: center; width: 100%;">
+                                            Epicentro Copa 2026 • Clique para virar
+                                        </p>
+                                    </div>
+                                </div>
+                            `;
+                            container.appendChild(cardElement);
+                        }, index * 200);
+                    });
+
+                    document.getElementById('close-pack-btn').classList.remove('hidden');
+                }, 800);
+            };
         }
 
         function closeModal() {
