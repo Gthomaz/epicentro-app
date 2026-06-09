@@ -1082,7 +1082,12 @@
                 document.getElementById('pack-overlay').classList.remove('hidden');
                 document.getElementById('arena-abertura').style.display = 'flex';
                 document.getElementById('pacotinho-epicentro').style.display = 'flex';
-                      function rasgarPacotinho() {
+                document.getElementById('cards-reveal').style.display = 'none';
+                document.getElementById('close-pack-btn').classList.add('hidden');
+            } catch(e) {}
+        }
+
+        function rasgarPacotinho() {
             const pacotinho = document.getElementById('pacotinho-epicentro');
             const arena = document.getElementById('arena-abertura');
             
@@ -1186,11 +1191,6 @@
                 // Limpa o DOM depois da animação
                 setTimeout(() => confete.remove(), 2000);
             }
-        }* 200); // 200ms de intervalo entre a queda de cada carta
-                });
-
-                document.getElementById('close-pack-btn').classList.remove('hidden');
-            }, 800);
         }
 
         function fecharPacote() {
