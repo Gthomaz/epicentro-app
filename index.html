@@ -1087,17 +1087,71 @@
             } catch(e) {}
         }
 
+        // --- Efeitos Sonoros com Web Audio API ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioContext();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playTearSound() {
+            initAudio();
+            const bufferSize = audioCtx.sampleRate * 0.4;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+            const noiseSource = audioCtx.createBufferSource();
+            noiseSource.buffer = buffer;
+            const gainNode = audioCtx.createGain();
+            gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(1000, audioCtx.currentTime);
+            filter.frequency.linearRampToValueAtTime(300, audioCtx.currentTime + 0.3);
+            noiseSource.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            noiseSource.start();
+        }
+
+        function playSuccessSound() {
+            initAudio();
+            const freqs = [523.25, 659.25, 783.99, 1046.50]; // C Major arpeggio
+            freqs.forEach((freq, i) => {
+                const osc = audioCtx.createOscillator();
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                const gainNode = audioCtx.createGain();
+                gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + i * 0.05 + 0.05);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.0);
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                osc.start(audioCtx.currentTime + i * 0.05);
+                osc.stop(audioCtx.currentTime + 1.0);
+            });
+        }
+
         function rasgarPacotinho() {
             const pacotinho = document.getElementById('pacotinho-epicentro');
             const arena = document.getElementById('arena-abertura');
             
+            initAudio(); // Garante o destravamento do áudio no clique
+            
             // 1. Inicia a animação de rasgar/tremer
             pacotinho.classList.add('rasgando');
+            playTearSound(); // Efeito de rasgar
             
             // 2. Após 1.5 segundos, o pacote "estoura"
             setTimeout(() => {
                 pacotinho.style.display = 'none'; // Esconde o pacote
                 pacotinho.classList.remove('rasgando'); // Limpa a classe
+                playSuccessSound(); // Som de triunfo e alegria!
                 gerarExplosaoConfetes(); // Chama a explosão de alegria
                 
                 // 3. Após a explosão (1 segundo depois), mostra as figurinhas novas
