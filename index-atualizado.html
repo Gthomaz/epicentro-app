@@ -160,12 +160,11 @@
 
         /* FRENTE: Estilo Dourado Lendário Glassmorphism */
         .card-front {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 2px solid rgba(255, 215, 0, 0.7); /* Borda Dourada */
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.25), inset 0 0 15px rgba(255, 255, 255, 0.05);
-            color: #fff;
+            background: transparent;
+            border: none;
+            padding: 0;
+            overflow: hidden;
+            border-radius: 12px;
         }
 
         .card-badge-country {
@@ -275,8 +274,12 @@
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            display: flex; flex-direction: column; justify-content: flex-start; align-items: center;
             z-index: 1000;
+            overflow-y: auto;
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            overscroll-behavior: contain;
         }
         /* Container centralizado */
         .arena-abertura {
@@ -1029,30 +1032,27 @@
                         ${reg.quantidade > 1 ? '<div class="badge-qtd">' + reg.quantidade + '</div>' : ''}
                         <div class="card-inner">
                             <div class="card-front">
-                                <span class="card-badge-country">${extras.pais}</span>
-                                <h4 class="card-player-name">${fig.nome_jogador}</h4>
+                                <img src="${avatarImg}" alt="${fig.nome_jogador}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1;" onerror="this.src='https://via.placeholder.com/220x360?text=Craque'">
                                 
-                                <div class="card-avatar-box">
-                                    <img src="${avatarImg}" alt="${fig.nome_jogador}" onerror="this.src='https://via.placeholder.com/110?text=Craque'">
-                                </div>
-                                
-                                <div class="card-stats-grid">
-                                    <div class="stat-box">
-                                        <div class="stat-value">${extras.habilidade}</div>
-                                        <div class="stat-label">Hab</div>
+                                <div style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 14px; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.8) 50%, transparent 100%);">
+                                    <div class="card-stats-grid" style="margin-top: 0; margin-bottom: 8px;">
+                                        <div class="stat-box">
+                                            <div class="stat-value">${extras.habilidade}</div>
+                                            <div class="stat-label">Hab</div>
+                                        </div>
+                                        <div class="stat-box">
+                                            <div class="stat-value">${extras.ousadia}</div>
+                                            <div class="stat-label">Ous</div>
+                                        </div>
+                                        <div class="stat-box">
+                                            <div class="stat-value">${extras.drible}</div>
+                                            <div class="stat-label">Dri</div>
+                                        </div>
                                     </div>
-                                    <div class="stat-box">
-                                        <div class="stat-value">${extras.ousadia}</div>
-                                        <div class="stat-label">Ous</div>
+                                    
+                                    <div class="card-fact-footer" style="background: rgba(0,0,0,0.6); border-top: none;">
+                                        <p><strong>Fato:</strong> ${extras.fato}</p>
                                     </div>
-                                    <div class="stat-box">
-                                        <div class="stat-value">${extras.drible}</div>
-                                        <div class="stat-label">Dri</div>
-                                    </div>
-                                </div>
-                                
-                                <div class="card-fact-footer">
-                                    <p><strong>Fato:</strong> ${extras.fato}</p>
                                 </div>
                             </div>
                             
@@ -1121,20 +1121,16 @@
                                 <div class="badge-qtd" style="background:${fig.is_nova ? '#10b981' : '#f59e0b'}; font-size:0.6rem; width:auto; padding:0 5px; right:10px; top:10px; z-index:10;">${fig.is_nova ? 'Nova!' : 'Repetida'}</div>
                                 <div class="card-inner">
                                     <div class="card-front">
-                                        <span class="card-badge-country">${extras.pais}</span>
-                                        <h4 class="card-player-name">${fig.nome_jogador}</h4>
+                                        <img src="${avatarImg}" alt="${fig.nome_jogador}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1;" onerror="this.src='https://via.placeholder.com/220x360?text=Craque'">
                                         
-                                        <div class="card-avatar-box">
-                                            <img src="${avatarImg}" alt="${fig.nome_jogador}" onerror="this.src='https://via.placeholder.com/110?text=Craque'">
+                                        <div style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 14px; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.8) 50%, transparent 100%);">
+                                            <div class="card-stats-grid" style="margin-top: 0; margin-bottom: 8px;">
+                                                <div class="stat-box"><div class="stat-value">${extras.habilidade}</div><div class="stat-label">Hab</div></div>
+                                                <div class="stat-box"><div class="stat-value">${extras.ousadia}</div><div class="stat-label">Ous</div></div>
+                                                <div class="stat-box"><div class="stat-value">${extras.drible}</div><div class="stat-label">Dri</div></div>
+                                            </div>
+                                            <div class="card-fact-footer" style="background: rgba(0,0,0,0.6); border-top: none;"><p><strong>Fato:</strong> ${extras.fato}</p></div>
                                         </div>
-                                        
-                                        <div class="card-stats-grid">
-                                            <div class="stat-box"><div class="stat-value">${extras.habilidade}</div><div class="stat-label">Hab</div></div>
-                                            <div class="stat-box"><div class="stat-value">${extras.ousadia}</div><div class="stat-label">Ous</div></div>
-                                            <div class="stat-box"><div class="stat-value">${extras.drible}</div><div class="stat-label">Dri</div></div>
-                                        </div>
-                                        
-                                        <div class="card-fact-footer"><p><strong>Fato:</strong> ${extras.fato}</p></div>
                                     </div>
                                     
                                     <div class="card-back">
